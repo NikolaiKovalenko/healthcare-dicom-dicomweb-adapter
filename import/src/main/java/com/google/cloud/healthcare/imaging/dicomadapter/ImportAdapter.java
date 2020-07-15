@@ -78,6 +78,10 @@ public class ImportAdapter {
       MonitoringService.disable();
     }
 
+    // retrying upload flags
+    String persistentFileStorageLocation = flags.persistentFileStorageLocation;
+    Integer persistentFileUploadRetryAmount = (flags.persistentFileUploadRetryAmount.isEmpty()?1:flags.persistentFileUploadRetryAmount)
+
     // Dicom service handlers.
     DicomServiceRegistry serviceRegistry = new DicomServiceRegistry();
 
