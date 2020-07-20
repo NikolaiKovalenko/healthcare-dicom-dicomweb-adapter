@@ -31,7 +31,7 @@ public abstract class AbstractBackupUploadService implements IBackupUploadServic
         // todo: implement_me
     }
 
-    public abstract byte[] doReadBackupFile(String downloadPath);
+    public abstract byte[] doReadBackupFile(String downloadPath) throws BackupExeption;
 
     static class BackupExeption extends IOException {
         public BackupExeption(String message, Throwable cause) {
