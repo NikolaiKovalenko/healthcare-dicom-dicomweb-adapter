@@ -2,6 +2,8 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import com.google.cloud.healthcare.IDicomWebClient;
 
+import java.io.IOException;
+
 public abstract class AbstractBackupUploadService implements IBackupUploadService {
     private IDicomWebClient dicomWebClient;
     private String uploadStorageLocation;
@@ -23,5 +25,17 @@ public abstract class AbstractBackupUploadService implements IBackupUploadServic
 
     protected int getUploadRetryAmount() {
         return uploadRetryAmount;
+    }
+
+    public void startUploading(IDicomWebClient dicomWebClient, BackupState backupState) {
+        // todo: implement_me
+    }
+
+    public abstract byte[] doReadBackupFile(String downloadPath);
+
+    static class BackupExeption extends IOException {
+        public BackupExeption(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }

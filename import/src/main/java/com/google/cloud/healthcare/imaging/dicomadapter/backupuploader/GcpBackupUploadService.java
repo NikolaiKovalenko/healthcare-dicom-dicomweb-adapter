@@ -8,12 +8,13 @@ public class GcpBackupUploadService extends AbstractBackupUploadService {
     }
 
     @Override
-    public void createBackup(byte[] backupData) {
-        // todo: implement_me
+    public byte[] doReadBackupFile(String downloadPath) {
+        return new byte[0];
     }
 
     @Override
-    public void startUploading() {
+    public BackupState createBackup(byte[] backupData) throws BackupExeption {
         // todo: implement_me
+        return null;
     }
 }
