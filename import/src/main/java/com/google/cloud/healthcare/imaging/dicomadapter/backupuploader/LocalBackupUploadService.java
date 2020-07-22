@@ -1,5 +1,6 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,7 +31,10 @@ public class LocalBackupUploadService extends AbstractBackupUploadService {
     }
 
     @Override
-    public void removeBackup(String uploadFilePath) {
-        // todo: implement_me
+    public void removeBackup(String uploadFilePath) throws BackupExeption {
+        File file = new File(uploadFilePath);
+        if (!file.delete()){
+            throw new BackupExeption("Error with removing temporary file", new Exception());
+        }
     }
 }
