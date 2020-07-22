@@ -2,8 +2,8 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 public class DelayCalculator {
 
-    private static final long DELAY_CALCULATION_BASE = 2l;
-    private static final long MILS_MUL = 1000l;
+    private static final long DELAY_CALCULATION_BASE = 2L;
+    private static final long MILS_MUL = 1000L;
 
     private int attemptsAmount;
     private int minUploadDelay;
@@ -18,7 +18,7 @@ public class DelayCalculator {
     public long getExponentialDelayMillis(int attemptsLeft) {
         long delay = 0;
         if (attemptsLeft <= attemptsAmount) {
-            delay = minUploadDelay + (Math.round(Math.pow((double)DELAY_CALCULATION_BASE, attemptsLeft)) - DELAY_CALCULATION_BASE)*MILS_MUL;
+            delay = minUploadDelay + (Math.round(Math.pow((double)DELAY_CALCULATION_BASE, attemptsAmount - attemptsLeft + 1)) - DELAY_CALCULATION_BASE)*MILS_MUL;
         } else {
             delay = minUploadDelay + (Math.round(Math.pow((double)DELAY_CALCULATION_BASE, attemptsAmount)) - DELAY_CALCULATION_BASE)*MILS_MUL;
         }
