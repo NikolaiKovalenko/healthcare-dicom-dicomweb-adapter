@@ -1,34 +1,41 @@
 package com.google.cloud.healthcare.imaging.dicomadapter;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+public class DelayCalculatorTest {
+    DelayCalculator calc;
 
-public class DelayCalculatorTest extends Assert {
-    HashMap<Integer, Long> values;
     @Before
     public void setup(){
-        values = new HashMap<>(){
-            {
-                put(5, 100L);
-                put(4, 2100L);
-                put(3, 5000L);
-                put(2, 5000L);
-                put(1, 5000L);
-                put(0, 5000L);
-                put(20, 5000L);
-            }};
+        calc = new DelayCalculator(5,100, 5000);
     }
 
     @Test
-    public void delay(){
-        DelayCalculator calc = new DelayCalculator(5,100, 5000);
-        for (Map.Entry<Integer, Long> entry: values.entrySet()) {
-            assertEquals(calc.getExponentialDelayMillis(entry.getKey()), entry.getValue().longValue());
-        }
+    public void delayOnFirstTry(){
+        assertThat(calc.getExponentialDelayMillis(5)).isEqualTo(100L);
+    }
+
+    @Test
+    public void delayOnLastTry(){
+        assertThat(calc.getExponentialDelayMillis(1)).isEqualTo(5000L);
+    }
+
+    @Test
+    public void delayOnIntermediateTry(){
+        assertThat(calc.getExponentialDelayMillis(4)).isEqualTo(2100L);
+    }
+
+    @Test
+    public void delayWithNegativeValue(){
+        assertThat(calc.getExponentialDelayMillis(-3)).isEqualTo(100L);
+    }
+
+    @Test
+    public void delayWithInvavidAttemptValue(){
+        assertThat(calc.getExponentialDelayMillis(20)).isEqualTo(5000L);
     }
 }
