@@ -170,7 +170,7 @@ public class CStoreService extends BasicCStoreSCP {
         MonitoringService.addEvent(Event.CSTORE_BYTES, countingStream.getCount());
       } catch (DicomWebException e) {
       if (backupUploadService != null) {
-        log.error("C-STORE request failed. Trying to resend... ", e);
+        reportBackupError(e);
         backupUploadService.startUploading(destinationClient.get(), backupState.get());
       } else {
         reportError(e);
@@ -181,6 +181,10 @@ public class CStoreService extends BasicCStoreSCP {
     } catch (DicomServiceException e) {
       reportError(e);
       throw e;
+    } catch (IBackupUploader.BackupExeption e) {
+      reportBackupError(e);
+      // todo: throw exception
+      throw new DicomServiceException(Status.ProcessingFailure, e);
     } catch (Throwable e) {
       reportError(e);
       throw new DicomServiceException(Status.ProcessingFailure, e);
@@ -190,6 +194,11 @@ public class CStoreService extends BasicCStoreSCP {
   private void reportError(Throwable e) {
     MonitoringService.addEvent(Event.CSTORE_ERROR);
     log.error("C-STORE request failed: ", e);
+  }
+
+  private void reportBackupError(Throwable e) {
+    MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
+    log.error("C-STORE request failed. Trying to resend...", e);
   }
 
   private void validateParam(String value, String name) throws DicomServiceException {
