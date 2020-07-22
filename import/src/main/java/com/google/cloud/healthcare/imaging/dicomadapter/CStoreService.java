@@ -184,7 +184,9 @@ public class CStoreService extends BasicCStoreSCP {
     } catch (IBackupUploader.BackupExeption e) {
       reportBackupError(e);
       // todo: throw exception
-      throw new DicomServiceException(Status.ProcessingFailure, e);
+      DicomServiceException serviceException = new DicomServiceException(Status.ProcessingFailure, e);
+      serviceException.setErrorComment(e.getMessage());
+      throw serviceException;
     } catch (Throwable e) {
       reportError(e);
       throw new DicomServiceException(Status.ProcessingFailure, e);
