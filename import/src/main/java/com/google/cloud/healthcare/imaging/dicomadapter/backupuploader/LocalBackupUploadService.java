@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class LocalBackupUploadService extends AbstractBackupUploadService {
     public LocalBackupUploadService(String uploadFilePath, DelayCalculator delayCalculator) {
@@ -32,9 +35,10 @@ public class LocalBackupUploadService extends AbstractBackupUploadService {
 
     @Override
     public void removeBackup(String uploadFilePath) throws BackupExeption {
-        File file = new File(uploadFilePath);
-        if (!file.delete()){
-            throw new BackupExeption("Error with removing temporary file", new Exception());
+        try {
+            Files.delete(Paths.get(uploadFilePath));
+        }catch (IOException e){
+            throw new BackupExeption("Error with removing temporary file", e);
         }
     }
 }

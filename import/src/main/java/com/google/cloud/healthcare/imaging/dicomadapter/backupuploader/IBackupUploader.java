@@ -11,5 +11,8 @@ public interface IBackupUploader {
         public BackupExeption(String message, Throwable cause) {
             super(message, cause);
         }
+        public BackupExeption(String message) {
+            super(message);
+        }
     }
 }
