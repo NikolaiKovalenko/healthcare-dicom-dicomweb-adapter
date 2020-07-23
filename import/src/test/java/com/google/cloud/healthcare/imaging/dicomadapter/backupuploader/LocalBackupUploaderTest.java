@@ -13,19 +13,18 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 @RunWith(JUnit4.class)
-public class LocalBackupUploadServiceTest {
-    private LocalBackupUploadService localBackupUploadService;
-    private DelayCalculator delayCalculator;
+public class LocalBackupUploaderTest {
     private static byte[] bytes = new byte[]{0, 1, 2, 5, 4, 3, 5, 4, 2, 0, 4, 5, 4, 7};
-
     private static final String READ_FILENAME = "test_read";
     private static final String WRITE_FILENAME = "test_write";
     private static final String REMOVE_FILENAME = "test_remove";
+    private static final String BACKUP_PATH = "backupPath";
+
+    private IBackupUploader localBackupUploader;
 
     @Before
     public void setUp() throws Exception {
-        delayCalculator = new DelayCalculator(5,100, 5000);
-        localBackupUploadService = new LocalBackupUploadService("test", delayCalculator);
+        localBackupUploader = new LocalBackupUploader();
     }
 
     @BeforeClass
@@ -54,19 +53,21 @@ public class LocalBackupUploadServiceTest {
 
     @Test
     public void doWriteBackup() throws IBackupUploader.BackupExeption {
-        localBackupUploadService.doWriteBackup(bytes, WRITE_FILENAME);
+        localBackupUploader.doWriteBackup(bytes, BACKUP_PATH, WRITE_FILENAME);
     }
 
     @Test
     public void doWriteBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
         exceptionRule.expect(IBackupUploader.BackupExeption.class);
         exceptionRule.expectMessage("Error with writing backup file");
-        localBackupUploadService.doWriteBackup(bytes, "");
+        localBackupUploader.doWriteBackup(bytes, "","");
+        //todo: add test: pathNotEmpty but FileIsEmpty
+        //todo: add test: write and read two different files with two unic names
     }
 
     @Test
     public void doReadBackup() throws IBackupUploader.BackupExeption {
-        byte[] data = localBackupUploadService.doReadBackup(READ_FILENAME);
+        byte[] data = localBackupUploader.doReadBackup(BACKUP_PATH, READ_FILENAME);
         assertThat(data).hasLength(14);
         assertThat(data).isEqualTo(bytes);
     }
@@ -75,30 +76,18 @@ public class LocalBackupUploadServiceTest {
     public void doReadBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
         exceptionRule.expect(IBackupUploader.BackupExeption.class);
         exceptionRule.expectMessage("Error with reading backup file");
-        localBackupUploadService.doReadBackup("no_file");
+        localBackupUploader.doReadBackup(BACKUP_PATH,"no_file");
     }
 
     @Test
     public void removeBackup() throws IBackupUploader.BackupExeption {
-        localBackupUploadService.removeBackup(REMOVE_FILENAME);
+        localBackupUploader.removeBackup(BACKUP_PATH, REMOVE_FILENAME);
     }
 
     @Test
     public void removeBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
         exceptionRule.expect(IBackupUploader.BackupExeption.class);
         exceptionRule.expectMessage("Error with removing temporary file");
-        localBackupUploadService.removeBackup("some_file");
-    }
-
-    @Test
-    public void createBackup() throws IBackupUploader.BackupExeption {
-        BackupState backupState = localBackupUploadService.createBackup(bytes);
-        assertThat(backupState).isNotNull();
-        assertThat(backupState).isInstanceOf(BackupState.class);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void createBackup_Failed_OnInvalidBackupData() throws IBackupUploader.BackupExeption {
-        localBackupUploadService.createBackup(null);
+        localBackupUploader.removeBackup(BACKUP_PATH,"some_file");
     }
 }

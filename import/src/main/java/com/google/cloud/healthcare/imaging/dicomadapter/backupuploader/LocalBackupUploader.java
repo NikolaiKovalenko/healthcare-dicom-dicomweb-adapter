@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class LocalBackupUploadService implements IBackupUploader {
+public class LocalBackupUploader implements IBackupUploader {
 
     @Override
     public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName) throws BackupExeption {

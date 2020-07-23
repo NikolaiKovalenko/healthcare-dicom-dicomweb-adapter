@@ -1,8 +1,6 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
-import com.google.cloud.healthcare.IDicomWebClient;
-
-public class GcpBackupUploadService implements IBackupUploader {
+public class GcpBackupUploader implements IBackupUploader {
 
     @Override
     public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName) throws BackupExeption {

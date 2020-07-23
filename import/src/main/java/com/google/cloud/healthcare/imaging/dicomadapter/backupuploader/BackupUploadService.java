@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class AbstractBackupUploadService implements IBackupUploadService {
+public class BackupUploadService implements IBackupUploadService {
 
     private final DelayCalculator delayCalculator;
     private final IBackupUploader backupUploader;
@@ -19,7 +19,7 @@ public class AbstractBackupUploadService implements IBackupUploadService {
     private Logger log = LoggerFactory.getLogger(this.getClass());
     private String uploadFilePath;
 
-    public AbstractBackupUploadService(String uploadFilePath, IBackupUploader backupUploader, DelayCalculator delayCalculator) {
+    public BackupUploadService(String uploadFilePath, IBackupUploader backupUploader, DelayCalculator delayCalculator) {
         this.uploadFilePath = uploadFilePath;
         this.backupUploader = backupUploader;
         this.delayCalculator = delayCalculator;
