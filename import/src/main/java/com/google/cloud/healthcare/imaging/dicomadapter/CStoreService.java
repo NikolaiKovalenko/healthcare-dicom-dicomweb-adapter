@@ -150,7 +150,7 @@ public class CStoreService extends BasicCStoreSCP {
               backupState.set(backupUploadService.createBackup(bytes));
             } catch (IOException ioex) {
               log.error("Backup creation failed.", ioex);
-              throw new IBackupUploader.BackupExeption("Backup creation failed.", ioex);
+              throw new IBackupUploader.BackupException("Backup creation failed.", ioex);
             }
 
             try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
