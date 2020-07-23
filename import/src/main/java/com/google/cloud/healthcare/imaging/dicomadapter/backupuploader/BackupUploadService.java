@@ -1,13 +1,17 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import com.google.cloud.healthcare.IDicomWebClient;
+import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
+import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.naming.CommunicationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 public class BackupUploadService implements IBackupUploadService {
@@ -43,35 +47,48 @@ public class BackupUploadService implements IBackupUploadService {
     }
 
     private void scheduleUploadWithDelay(IDicomWebClient webClient, byte [] bytes, BackupState backupState) {
+        String fileName = backupState.getUniqueFileName();
         if (backupState.decrement()) {
             int attemptNumber = attemptsAmount - backupState.getAttemptsCountdown();
-            log.info("Trying to resend data. Attempt № {}. data={}", attemptNumber, bytes);
-            CompletableFuture<Optional<Exception>> completableFuture = CompletableFuture.supplyAsync(() -> {
-                    try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
-                        webClient.stowRs(bais);
-                        log.debug("Resend attempt № {} - successful.", attemptNumber);
-                    } catch (IOException | IDicomWebClient.DicomWebException ex) {
-                        log.error("Resend attempt № {} - failed.", attemptsAmount - backupState.getAttemptsCountdown(), ex);
-                        return Optional.ofNullable(ex);
-                    }
-                    return Optional.empty();
-                },
-                CompletableFuture.delayedExecutor(
-                        delayCalculator.getExponentialDelayMillis(backupState.getAttemptsCountdown()),
-                        TimeUnit.MILLISECONDS)
-            )
-                .thenApply(r -> {
-                    if (r.isEmpty()) { //backup upload success
-                        backupUploader.removeBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
-                    } else if (r.get() instanceof IDicomWebClient.DicomWebException) {
-                        if (backupState.getAttemptsCountdown() > 0) {
-                            scheduleUploadWithDelay(webClient, bytes, backupState);
+
+            log.info("Trying to resend data, sopInstanceUID={}, attempt № {}. ", fileName, attemptNumber);
+            CompletableFuture<Void> completableFuture = CompletableFuture
+                .supplyAsync(() -> {
+                        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
+                            webClient.stowRs(bais);
+                            log.debug("sopInstanceUID={}, resend attempt № {}, - successful.", fileName, attemptNumber);
+                        } catch (IOException | IDicomWebClient.DicomWebException ex) {
+                            log.error("sopInstanceUID={}, resend attempt № {} - failed.", fileName, attemptsAmount - backupState.getAttemptsCountdown(), ex);
+                            throw new CompletionException(ex);
                         }
+                        return null;
+                    },
+                    CompletableFuture.delayedExecutor(
+                            delayCalculator.getExponentialDelayMillis(backupState.getAttemptsCountdown()),
+                            TimeUnit.MILLISECONDS)
+                    )
+                .exceptionally(ex -> {
+                    if (ex.getCause() instanceof IDicomWebClient.DicomWebException && backupState.getAttemptsCountdown() > 0) {
+                        scheduleUploadWithDelay(webClient, bytes, backupState);
+                    } else {
+                        MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
+                        log.error("sopInstanceUID={}, read backup failed.", fileName, ex.getCause());
                     }
+                    return null;
+                })
+                .thenAccept(action -> {
+                    try {
+                        backupUploader.removeBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
+                    } catch (IOException ioex) {
+                        throw new CompletionException(ioex);
+                    }
+                }).exceptionally(removeEx -> {
+                    MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
+                    log.error("sopInstanceUID={}, removeBackup failed.", fileName, removeEx.getCause());
                     return null;
                 });
         } else {
-            log.info("Backup resend attempts exhausted.");
+            log.info("sopInstanceUID={}, Backup resend attempts exhausted.", fileName);
         }
     }
 }
