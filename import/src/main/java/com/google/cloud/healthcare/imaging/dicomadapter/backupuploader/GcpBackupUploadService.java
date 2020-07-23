@@ -2,24 +2,21 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import com.google.cloud.healthcare.IDicomWebClient;
 
-public class GcpBackupUploadService extends AbstractBackupUploadService {
-    public GcpBackupUploadService(String uploadFilePath, DelayCalculator delayCalculator) {
-        super(uploadFilePath, delayCalculator);
-    }
+public class GcpBackupUploadService implements IBackupUploader {
 
     @Override
-    public void doWriteBackup(byte[] backupData, String uploadFilePath) {
+    public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName) throws BackupExeption {
         // todo: implement_me
     }
 
     @Override
-    public byte[] doReadBackup(String uploadFilePath) {
+    public byte[] doReadBackup(String uploadFilePath, String uniqueFileName) throws BackupExeption {
         return new byte[0];
         // todo: implement_me
     }
 
     @Override
-    public void removeBackup(String uploadFilePath) {
+    public void removeBackup(String uploadFilePath, String uniqueFileName) throws BackupExeption {
         // todo: implement_me
     }
 }

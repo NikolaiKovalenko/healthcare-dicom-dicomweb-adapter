@@ -26,6 +26,8 @@ import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomC
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig.TagFilterProfile;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploadService;
+import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.AbstractBackupUploadService;
+import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.LocalBackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstoresender.CStoreSenderFactory;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
@@ -114,12 +116,13 @@ public class ImportAdapter {
     Map<DestinationFilter, IDicomWebClient> destinationMap = configureDestinationMap(
         flags.destinationConfigInline, flags.destinationConfigPath, credentials);
 
-    IBackupUploadService localBackupUploadService = new LocalBackupUploadService(uploadPath,
-            new DelayCalculator(uploadRetryAmount, minUploadDelay, maxWaitingTimeBtwUploads));
+    IBackupUploader backupUploader = new LocalBackupUploadService();
+    IBackupUploadService backupUploadService = new AbstractBackupUploadService(uploadPath,
+        backupUploader, new DelayCalculator(uploadRetryAmount, minUploadDelay, maxWaitingTimeBtwUploads));
 
     DicomRedactor redactor = configureRedactor(flags);
     CStoreService cStoreService =
-        new CStoreService(defaultCstoreDicomWebClient, destinationMap, redactor, flags.transcodeToSyntax, localBackupUploadService);
+        new CStoreService(defaultCstoreDicomWebClient, destinationMap, redactor, flags.transcodeToSyntax, backupUploadService);
     serviceRegistry.addDicomService(cStoreService);
 
     // Handle C-FIND

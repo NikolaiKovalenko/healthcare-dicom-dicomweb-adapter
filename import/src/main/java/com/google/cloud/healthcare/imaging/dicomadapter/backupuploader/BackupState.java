@@ -2,15 +2,21 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 public class BackupState {
     private String downloadFilePath;
+    private String uniqueFileName;
     private int attemptsCountdown;
 
-    public BackupState(String downloadFilePath, int attemptsCountdown) {
+    public BackupState(String downloadFilePath, String uniqueFileName, int attemptsCountdown) {
         this.downloadFilePath = downloadFilePath;
+        this.uniqueFileName = uniqueFileName;
         this.attemptsCountdown = attemptsCountdown;
     }
 
     public String getDownloadFilePath() {
         return downloadFilePath;
+    }
+
+    public String getUniqueFileName() {
+        return uniqueFileName;
     }
 
     public int getAttemptsCountdown() {

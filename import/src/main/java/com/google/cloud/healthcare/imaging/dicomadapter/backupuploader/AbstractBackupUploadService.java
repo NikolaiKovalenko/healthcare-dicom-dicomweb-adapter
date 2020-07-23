@@ -10,29 +10,31 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractBackupUploadService implements IBackupUploadService, IBackupUploader {
+public class AbstractBackupUploadService implements IBackupUploadService {
 
     private final DelayCalculator delayCalculator;
+    private final IBackupUploader backupUploader;
     private final int attemptsAmount;
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
     private String uploadFilePath;
 
-    public AbstractBackupUploadService(String uploadFilePath, DelayCalculator delayCalculator) {
+    public AbstractBackupUploadService(String uploadFilePath, IBackupUploader backupUploader, DelayCalculator delayCalculator) {
         this.uploadFilePath = uploadFilePath;
+        this.backupUploader = backupUploader;
         this.delayCalculator = delayCalculator;
         this.attemptsAmount = delayCalculator.getAttemptsAmount();
     }
 
     @Override
-    public BackupState createBackup(byte[] backupData) throws BackupExeption {
-        doWriteBackup(backupData, uploadFilePath);
-        return new BackupState(uploadFilePath, attemptsAmount);
+    public BackupState createBackup(byte[] backupData, String uniqueFileName) throws IBackupUploader.BackupExeption {
+        backupUploader.doWriteBackup(backupData, uploadFilePath, uniqueFileName);
+        return new BackupState(uploadFilePath, uniqueFileName, attemptsAmount);
     }
 
     @Override //todo: guard code from second method call
-    public void startUploading(IDicomWebClient webClient, BackupState backupState) throws BackupExeption {
-        byte[] bytes = doReadBackup(backupState.getDownloadFilePath());
+    public void startUploading(IDicomWebClient webClient, BackupState backupState) throws IBackupUploader.BackupExeption {
+        byte[] bytes = backupUploader.doReadBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
 
         int uploadAttemptsCountdown = backupState.getAttemptsCountdown();
         if (uploadAttemptsCountdown > 0) {
@@ -60,7 +62,7 @@ public abstract class AbstractBackupUploadService implements IBackupUploadServic
             )
                 .thenApply(r -> {
                     if (r.isEmpty()) { //backup upload success
-                        removeBackup(backupState.getDownloadFilePath());
+                        backupUploader.removeBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
                     } else if (r.get() instanceof IDicomWebClient.DicomWebException) {
                         if (backupState.getAttemptsCountdown() > 0) {
                             scheduleUploadWithDelay(webClient, bytes, backupState);
