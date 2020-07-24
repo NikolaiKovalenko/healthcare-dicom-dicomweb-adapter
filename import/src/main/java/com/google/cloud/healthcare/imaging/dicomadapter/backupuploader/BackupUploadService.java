@@ -30,18 +30,14 @@ public class BackupUploadService implements IBackupUploadService {
   }
 
   @Override
-  public BackupState createBackup(byte[] backupData, String uniqueFileName)
-      throws IBackupUploader.BackupExeption {
+  public BackupState createBackup(byte[] backupData, String uniqueFileName) throws IBackupUploader.BackupException {
     backupUploader.doWriteBackup(backupData, uploadFilePath, uniqueFileName);
     return new BackupState(uploadFilePath, uniqueFileName, attemptsAmount);
   }
 
   @Override // todo: guard code from second method call
-  public void startUploading(IDicomWebClient webClient, BackupState backupState)
-      throws IBackupUploader.BackupExeption {
-    byte[] bytes =
-        backupUploader.doReadBackup(
-            backupState.getDownloadFilePath(), backupState.getUniqueFileName());
+  public void startUploading(IDicomWebClient webClient, BackupState backupState) throws IBackupUploader.BackupException {
+    byte[] bytes = backupUploader.doReadBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
 
     int uploadAttemptsCountdown = backupState.getAttemptsCountdown();
     if (uploadAttemptsCountdown > 0) {
@@ -49,8 +45,7 @@ public class BackupUploadService implements IBackupUploadService {
     }
   }
 
-  private void scheduleUploadWithDelay(
-      IDicomWebClient webClient, byte[] bytes, BackupState backupState) {
+  private void scheduleUploadWithDelay(IDicomWebClient webClient, byte[] bytes, BackupState backupState) {
     String fileName = backupState.getUniqueFileName();
     if (backupState.decrement()) {
       int attemptNumber = attemptsAmount - backupState.getAttemptsCountdown();
@@ -66,10 +61,7 @@ public class BackupUploadService implements IBackupUploadService {
                       fileName,
                       attemptNumber);
                 } catch (IOException | IDicomWebClient.DicomWebException ex) {
-                  log.error(
-                      "sopInstanceUID={}, resend attempt № {} - failed.",
-                      fileName,
-                      attemptsAmount - backupState.getAttemptsCountdown(),
+                  log.error("sopInstanceUID={}, resend attempt № {} - failed.", fileName, attemptsAmount - backupState.getAttemptsCountdown(),
                       ex);
                   throw new CompletionException(ex);
                 }
@@ -92,8 +84,7 @@ public class BackupUploadService implements IBackupUploadService {
           .thenAccept(
               action -> {
                 try {
-                  backupUploader.removeBackup(
-                      backupState.getDownloadFilePath(), backupState.getUniqueFileName());
+                  backupUploader.removeBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
                 } catch (IOException ioex) {
                   throw new CompletionException(ioex);
                 }

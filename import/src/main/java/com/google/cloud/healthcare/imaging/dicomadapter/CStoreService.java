@@ -150,7 +150,7 @@ public class CStoreService extends BasicCStoreSCP {
               backupState.set(backupUploadService.createBackup(bytes, sopInstanceUID));
             } catch (IOException ioex) {
               log.error("Backup creation failed.", ioex);
-              throw new IBackupUploader.BackupExeption("Backup creation failed.", ioex);
+              throw new IBackupUploader.BackupException("Backup creation failed.", ioex);
             }
 
             try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
@@ -182,7 +182,7 @@ public class CStoreService extends BasicCStoreSCP {
     } catch (DicomServiceException e) {
       reportError(e);
       throw e;
-    } catch (IBackupUploader.BackupExeption e) {
+    } catch (IBackupUploader.BackupException e) {
         MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
         log.error("Backup io processing during C-STORE request is failed : ", e);
     } catch (Throwable e) {

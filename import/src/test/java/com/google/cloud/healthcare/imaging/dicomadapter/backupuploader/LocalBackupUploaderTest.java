@@ -64,13 +64,13 @@ public class LocalBackupUploaderTest {
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
-  public void doWriteBackup() throws IBackupUploader.BackupExeption {
+  public void doWriteBackup() throws IBackupUploader.BackupException {
     localBackupUploader.doWriteBackup(bytes, BACKUP_PATH, WRITE_FILENAME);
   }
 
   @Test
-  public void doWriteBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
-    exceptionRule.expect(IBackupUploader.BackupExeption.class);
+  public void doWriteBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupException {
+    exceptionRule.expect(IBackupUploader.BackupException.class);
     exceptionRule.expectMessage("Error with writing backup file");
     localBackupUploader.doWriteBackup(bytes, "", "");
     // todo: add test: pathNotEmpty but FileIsEmpty
@@ -78,27 +78,27 @@ public class LocalBackupUploaderTest {
   }
 
   @Test
-  public void doReadBackup() throws IBackupUploader.BackupExeption {
+  public void doReadBackup() throws IBackupUploader.BackupException {
     byte[] data = localBackupUploader.doReadBackup(BACKUP_PATH, READ_FILENAME);
     assertThat(data).hasLength(14);
     assertThat(data).isEqualTo(bytes);
   }
 
   @Test
-  public void doReadBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
-    exceptionRule.expect(IBackupUploader.BackupExeption.class);
+  public void doReadBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupException {
+    exceptionRule.expect(IBackupUploader.BackupException.class);
     exceptionRule.expectMessage("Error with reading backup file");
     localBackupUploader.doReadBackup(BACKUP_PATH, "no_file");
   }
 
   @Test
-  public void removeBackup() throws IBackupUploader.BackupExeption {
+  public void removeBackup() throws IBackupUploader.BackupException {
     localBackupUploader.removeBackup(BACKUP_PATH, REMOVE_FILENAME);
   }
 
   @Test
-  public void removeBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupExeption {
-    exceptionRule.expect(IBackupUploader.BackupExeption.class);
+  public void removeBackup_Failed_OnInvalidPath() throws IBackupUploader.BackupException {
+    exceptionRule.expect(IBackupUploader.BackupException.class);
     exceptionRule.expectMessage("Error with removing temporary file");
     localBackupUploader.removeBackup(BACKUP_PATH, "some_file");
   }

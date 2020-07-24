@@ -23,6 +23,10 @@ public class BackupState {
     return attemptsCountdown;
   }
 
+  /**
+   * Decrements attemptsCountdown field value if it`s value more then zero.
+   * @return true if decremented, false if not.
+   */
   public boolean decrement() {
     if (attemptsCountdown > 0) {
       attemptsCountdown--;
