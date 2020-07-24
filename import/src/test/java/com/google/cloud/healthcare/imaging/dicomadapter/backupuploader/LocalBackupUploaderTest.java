@@ -86,16 +86,16 @@ public class LocalBackupUploaderTest {
       byte[] seq2 = new byte[]{8, 5, 4, 9, 6, 7, 0, 2, 4, 4, 3, 5, 9};
       String uniqFilename1 = "uniq1";
       String uniqFilename2 = "uniq2";
-      localBackupUploader.doWriteBackup(seq1, BACKUP_PATH, uniqFilename1);
-      localBackupUploader.doWriteBackup(seq2, BACKUP_PATH, uniqFilename2);
-      byte[] data1 = localBackupUploader.doReadBackup(BACKUP_PATH, uniqFilename1);
-      byte[] data2 = localBackupUploader.doReadBackup(BACKUP_PATH, uniqFilename2);
+      localBackupUploader.doWriteBackup(seq1, uniqFilename1, uniqFilename1);
+      localBackupUploader.doWriteBackup(seq2, uniqFilename2, uniqFilename2);
+      byte[] data1 = localBackupUploader.doReadBackup(uniqFilename1, uniqFilename1);
+      byte[] data2 = localBackupUploader.doReadBackup(uniqFilename2, uniqFilename2);
       assertThat(data1).hasLength(seq1.length);
       assertThat(data1).isEqualTo(seq1);
       assertThat(data2).hasLength(seq2.length);
       assertThat(data2).isEqualTo(seq2);
-      localBackupUploader.removeBackup(BACKUP_PATH, uniqFilename1);
-      localBackupUploader.removeBackup(BACKUP_PATH, uniqFilename2);
+      localBackupUploader.removeBackup(uniqFilename1, uniqFilename1);
+      localBackupUploader.removeBackup(uniqFilename2, uniqFilename2);
   }
 
   @Test

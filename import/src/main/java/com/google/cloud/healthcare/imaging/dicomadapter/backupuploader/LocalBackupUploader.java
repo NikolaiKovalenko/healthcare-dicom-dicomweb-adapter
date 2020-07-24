@@ -11,7 +11,7 @@ public class LocalBackupUploader implements IBackupUploader {
   @Override
   public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName)
       throws BackupException {
-
+    createDir(uploadFilePath);
     try (FileOutputStream fos =
         new FileOutputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
       fos.write(backupData, 0, backupData.length);
@@ -39,8 +39,29 @@ public class LocalBackupUploader implements IBackupUploader {
   public void removeBackup(String uploadFilePath, String uniqueFileName) throws BackupException {
     try {
       Files.delete(Paths.get(uploadFilePath, uniqueFileName));
+      deleteDir(uploadFilePath);
     } catch (IOException e) {
-      throw new BackupException("Error with removing temporary file", e);
+      throw new BackupException("Error with removing temporary file : " + e.getMessage() , e);
+    }
+  }
+
+  public void createDir(String dir) throws BackupException {
+    try {
+      if (!Files.exists(Paths.get(dir))) {
+        Files.createDirectory(Paths.get(dir));
+      }
+    }catch (IOException e) {
+      throw new BackupException("Error with create directory : " + e.getMessage(), e);
+    }
+  }
+
+  public void deleteDir(String dir) throws BackupException {
+    try {
+      if (Files.exists(Paths.get(dir)) && Files.list(Paths.get(dir)).count() == 0) {
+        Files.delete(Paths.get(dir));
+      }
+    }catch (IOException e) {
+      throw new BackupException("Error with delete directory : " + e.getMessage(), e);
     }
   }
 }
