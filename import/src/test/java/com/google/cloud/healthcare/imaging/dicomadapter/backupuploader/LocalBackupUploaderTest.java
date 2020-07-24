@@ -1,6 +1,7 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -29,22 +30,32 @@ public class LocalBackupUploaderTest {
 
     @BeforeClass
     public static void initData() {
-        try (FileOutputStream tr = new FileOutputStream(READ_FILENAME);
-                FileOutputStream fw = new FileOutputStream(REMOVE_FILENAME)){
-            tr.write(bytes, 0, bytes.length);
-            fw.write(bytes, 0, bytes.length);
-        }catch (IOException ignored) {
-
+        try {
+            if (!Files.exists(Paths.get(BACKUP_PATH))) {
+                Files.createDirectory(Paths.get(BACKUP_PATH));
+            }
+            try (FileOutputStream tr = new FileOutputStream(Paths.get(BACKUP_PATH, READ_FILENAME).toString());
+                FileOutputStream fw = new FileOutputStream(Paths.get(BACKUP_PATH, REMOVE_FILENAME).toString())) {
+                tr.write(bytes, 0, bytes.length);
+                fw.write(bytes, 0, bytes.length);
+            }
+        } catch (IOException ex) {
+            fail("On test file creation failed.");
+            ex.printStackTrace();
         }
     }
 
     @AfterClass
     public static void clearData() {
         try {
-            Files.delete(Paths.get(READ_FILENAME));
-            Files.delete(Paths.get(WRITE_FILENAME));
-        }catch (Exception ignored){
-
+            if (Files.exists(Paths.get(BACKUP_PATH))) {
+                Files.delete(Paths.get(BACKUP_PATH, READ_FILENAME));
+                Files.delete(Paths.get(BACKUP_PATH, WRITE_FILENAME));
+                Files.delete(Paths.get(BACKUP_PATH));
+            }
+        } catch (Exception ex) {
+            fail("test file clear failed.");
+            ex.printStackTrace();
         }
     }
 
