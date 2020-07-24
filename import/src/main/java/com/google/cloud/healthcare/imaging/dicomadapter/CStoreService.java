@@ -96,6 +96,7 @@ public class CStoreService extends BasicCStoreSCP {
 
       AtomicReference<BackupState> backupState = new AtomicReference<>();
       AtomicReference<IDicomWebClient> destinationClient = new AtomicReference<>();
+      boolean firstUploadedAttemptFailed = false;
 
       try {
         MonitoringService.addEvent(Event.CSTORE_REQUEST);
@@ -172,6 +173,7 @@ public class CStoreService extends BasicCStoreSCP {
       if (backupUploadService != null) {
         MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
         log.error("C-STORE request failed. Trying to resend...", e);
+        firstUploadedAttemptFailed = true;
         backupUploadService.startUploading(destinationClient.get(), backupState.get());
       } else {
         reportError(e);
@@ -188,6 +190,10 @@ public class CStoreService extends BasicCStoreSCP {
     } catch (Throwable e) {
       reportError(e);
       throw new DicomServiceException(Status.ProcessingFailure, e);
+    } finally {
+      if (firstUploadedAttemptFailed == false && backupUploadService != null) {
+        backupUploadService.removeBackup(backupState.get());
+      }
     }
   }
 
