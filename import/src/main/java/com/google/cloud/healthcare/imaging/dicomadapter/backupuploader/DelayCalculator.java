@@ -5,7 +5,6 @@ public class DelayCalculator {
   private static final double DELAY_CALCULATION_BASE = 2D;
   private static final long MILS_MUL = 1000L;
 
-
   private int attemptsAmount;
   private int minUploadDelay;
   private int maxWaitingTimeBtwUpload;
