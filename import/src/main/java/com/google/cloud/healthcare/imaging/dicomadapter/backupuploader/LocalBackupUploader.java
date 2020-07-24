@@ -26,9 +26,12 @@ public class LocalBackupUploader implements IBackupUploader {
         new FileInputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
       byte[] buffer = new byte[fin.available()];
       fin.read(buffer, 0, fin.available());
+      if (buffer.length == 0) {
+        throw new BackupException("No data in temporary file");
+      }
       return buffer;
     } catch (IOException ex) {
-      throw new BackupException("Error with reading backup file", ex);
+      throw new BackupException("Error with reading backup file : " + ex.getMessage() , ex);
     }
   }
 
