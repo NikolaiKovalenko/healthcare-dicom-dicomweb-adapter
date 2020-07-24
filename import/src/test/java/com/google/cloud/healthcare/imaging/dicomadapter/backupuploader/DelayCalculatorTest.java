@@ -1,8 +1,7 @@
-package com.google.cloud.healthcare.imaging.dicomadapter;
+package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
 import org.junit.Before;
 import org.junit.Test;
 

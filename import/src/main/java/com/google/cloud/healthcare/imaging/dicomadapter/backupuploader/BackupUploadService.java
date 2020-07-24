@@ -32,6 +32,7 @@ public class BackupUploadService implements IBackupUploadService {
   @Override
   public BackupState createBackup(byte[] backupData, String uniqueFileName) throws IBackupUploader.BackupException {
     backupUploader.doWriteBackup(backupData, uploadFilePath, uniqueFileName);
+    log.debug("sopInstanceUID={}, backup saved.");
     return new BackupState(uploadFilePath, uniqueFileName, attemptsAmount);
   }
 
