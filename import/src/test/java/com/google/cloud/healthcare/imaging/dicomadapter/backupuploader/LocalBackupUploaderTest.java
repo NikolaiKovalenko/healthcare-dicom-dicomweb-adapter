@@ -87,7 +87,7 @@ public class LocalBackupUploaderTest {
 
     exceptionRule.expect(IBackupUploader.BackupException.class);
     exceptionRule.expectMessage(
-        "Error with reading backup file : backup\\path\\no_file (The system cannot find the file specified)");
+        "Error with reading backup file");
     localBackupUploader.doReadBackup(BACKUP_PATH_STR, "no_file");
   }
 
