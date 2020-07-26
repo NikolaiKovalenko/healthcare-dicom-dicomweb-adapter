@@ -83,9 +83,12 @@ public class BackupUploadService implements IBackupUploadService {
                   TimeUnit.MILLISECONDS))
           .exceptionally(
               ex -> {
-                if (ex.getCause() instanceof IDicomWebClient.DicomWebException
-                    && backupState.getAttemptsCountdown() > 0) {
-                  scheduleUploadWithDelay(webClient, bytes, backupState);
+                if (ex.getCause() instanceof IDicomWebClient.DicomWebException) {
+                  if (backupState.getAttemptsCountdown() > 0) {
+                    scheduleUploadWithDelay(webClient, bytes, backupState);
+                  } else {
+                    log.debug("sopInstanceUID={}, No resend attempt left.", fileName);
+                  }
                 } else {
                   MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
                   log.error("sopInstanceUID={}, read backup failed.", fileName, ex.getCause());
