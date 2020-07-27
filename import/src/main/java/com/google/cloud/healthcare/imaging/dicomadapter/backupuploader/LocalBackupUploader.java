@@ -11,12 +11,14 @@ public class LocalBackupUploader implements IBackupUploader {
   @Override
   public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName)
       throws BackupException {
-
-    try (FileOutputStream fos =
-        new FileOutputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
-      fos.write(backupData, 0, backupData.length);
+    try {
+      Files.createDirectories(Paths.get(uploadFilePath));
+      try (FileOutputStream fos =
+          new FileOutputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
+        fos.write(backupData, 0, backupData.length);
+      }
     } catch (IOException ex) {
-      throw new BackupException("Error with writing backup file", ex);
+      throw new BackupException("Error with writing backup file.", ex);
     }
   }
 
@@ -27,7 +29,7 @@ public class LocalBackupUploader implements IBackupUploader {
       byte[] buffer = new byte[fin.available()];
       fin.read(buffer, 0, fin.available());
       if (buffer.length == 0) {
-        throw new BackupException("No data in temporary file");
+        throw new BackupException("No data in backup file.");
       }
       return buffer;
     } catch (IOException ex) {
@@ -40,7 +42,7 @@ public class LocalBackupUploader implements IBackupUploader {
     try {
       Files.delete(Paths.get(uploadFilePath, uniqueFileName));
     } catch (IOException e) {
-      throw new BackupException("Error with removing temporary file", e);
+      throw new BackupException("Error with removing backup file.", e);
     }
   }
 }
