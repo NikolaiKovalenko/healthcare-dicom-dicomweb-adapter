@@ -299,6 +299,9 @@ The following arguments are used to configure the mode :
 
 If the flag --persistent_file_storage_location is not used then loading occurs without writing a temporary file
 
+if the value for the flag --persistent_file_storage_location is specified in the format gs://project-id/bucket-id/some-object,
+ the file will be written to the specified project bucket. It is also necessary to set the system variable [GOOGLE_APPLICATION_CREDENTIALS](https://cloud.google.com/healthcare/docs/how-tos/authentication#setting_the_environment_variables) = path_to_file_with_json_data
+
 If you are using Kubernetes, then in the file `dicom_adapter.yaml` change the arguments in the file as follows :
 
 ```yaml
