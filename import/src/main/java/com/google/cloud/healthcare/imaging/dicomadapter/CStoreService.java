@@ -176,7 +176,7 @@ public class CStoreService extends BasicCStoreSCP {
         firstUploadedAttemptFailed = true;
         backupUploadService.startUploading(destinationClient.get(), backupState.get());
       } else {
-        MonitoringService.addEvent(Event.CSTORE_ERROR);
+        reportError(e);
         DicomServiceException serviceException = new DicomServiceException(e.getStatus(), e);
         serviceException.setErrorComment(e.getMessage());
         throw serviceException;
