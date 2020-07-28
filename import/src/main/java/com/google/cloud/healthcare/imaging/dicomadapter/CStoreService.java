@@ -186,7 +186,7 @@ public class CStoreService extends BasicCStoreSCP {
       throw e;
     } catch (IBackupUploader.BackupException e) {
         MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
-        log.error("Backup io processing during C-STORE request is failed : ", e);
+        log.error("Backup io processing during C-STORE request is failed: ", e);
     } catch (Throwable e) {
       reportError(e);
       throw new DicomServiceException(Status.ProcessingFailure, e);

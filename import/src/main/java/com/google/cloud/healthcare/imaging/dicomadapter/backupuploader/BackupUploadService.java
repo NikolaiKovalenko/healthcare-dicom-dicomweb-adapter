@@ -71,7 +71,7 @@ public class BackupUploadService implements IBackupUploadService {
                   webClient.stowRs(bais);
                   removeBackup(backupState);
                   log.debug(
-                      "sopInstanceUID={}, bytes={},\n resend attempt № {}, - successful.", fileName, bytes, attemptNumber);
+                      "sopInstanceUID={}, resend attempt № {}, - successful.", fileName, attemptNumber);
                 } catch (IOException | IDicomWebClient.DicomWebException ex) {
                   log.error("sopInstanceUID={}, resend attempt № {} - failed.",
                       fileName, attemptsAmount - backupState.getAttemptsCountdown(), ex);
