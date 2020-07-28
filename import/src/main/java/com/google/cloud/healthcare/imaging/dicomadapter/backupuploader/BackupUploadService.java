@@ -19,11 +19,8 @@ public class BackupUploadService implements IBackupUploadService {
   private final int attemptsAmount;
 
   private Logger log = LoggerFactory.getLogger(this.getClass());
-  private String uploadFilePath;
 
-  public BackupUploadService(
-      String uploadFilePath, IBackupUploader backupUploader, DelayCalculator delayCalculator) {
-    this.uploadFilePath = uploadFilePath;
+  public BackupUploadService(IBackupUploader backupUploader, DelayCalculator delayCalculator) {
     this.backupUploader = backupUploader;
     this.delayCalculator = delayCalculator;
     this.attemptsAmount = delayCalculator.getAttemptsAmount();
@@ -31,14 +28,14 @@ public class BackupUploadService implements IBackupUploadService {
 
   @Override
   public BackupState createBackup(byte[] backupData, String uniqueFileName) throws IBackupUploader.BackupException {
-    backupUploader.doWriteBackup(backupData, uploadFilePath, uniqueFileName);
+    backupUploader.doWriteBackup(backupData, uniqueFileName);
     log.debug("sopInstanceUID={}, backup saved.", uniqueFileName);
-    return new BackupState(uploadFilePath, uniqueFileName, attemptsAmount);
+    return new BackupState(uniqueFileName, attemptsAmount);
   }
 
   @Override // todo: guard code from second method call
   public void startUploading(IDicomWebClient webClient, BackupState backupState) throws IBackupUploader.BackupException {
-    byte[] bytes = backupUploader.doReadBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
+    byte[] bytes = backupUploader.doReadBackup(backupState.getUniqueFileName());
 
     int uploadAttemptsCountdown = backupState.getAttemptsCountdown();
     if (uploadAttemptsCountdown > 0) {
@@ -49,7 +46,7 @@ public class BackupUploadService implements IBackupUploadService {
   @Override
   public void removeBackup(BackupState backupState) {
     try {
-      backupUploader.removeBackup(backupState.getDownloadFilePath(), backupState.getUniqueFileName());
+      backupUploader.removeBackup(backupState.getUniqueFileName());
       log.debug("sopInstanceUID={}, removeBackup successful.", backupState.getUniqueFileName());
     } catch (IOException ex) {
       MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
