@@ -2,23 +2,19 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
-import org.apache.commons.lang3.StringUtils;
+import com.google.cloud.ReadChannel;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.StorageOptions;
 import org.apache.http.client.utils.URIBuilder;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import java.nio.channels.Channels;
 import java.util.List;
-
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
-import com.google.cloud.storage.Blob;
 
 public class GcpBackupUploader extends AbstractBackupUploader {
   private String projectName;
@@ -61,20 +57,8 @@ public class GcpBackupUploader extends AbstractBackupUploader {
     try {
       validatePathParameter(uniqueFileName, "unique file name");
       Blob blob = storage.get(BlobId.of(bucketName, getFullUploadObject(uniqueFileName)));
-      blob.downloadTo(Paths.get(uniqueFileName));
-      try (FileInputStream fin =
-                   new FileInputStream(uniqueFileName)) {
-        byte[] buffer = new byte[fin.available()];
-        fin.read(buffer, 0, fin.available());
-        if (buffer.length == 0) {
-          throw new BackupException("No data in backup file.");
-        }
-        return new ByteArrayInputStream(buffer);
-      } catch (Exception e) {
-        throw new BackupException("Error with reading file : " + e.getMessage());
-      } finally {
-        Files.deleteIfExists(Paths.get(uniqueFileName));
-      }
+      ReadChannel channel = blob.reader();
+      return Channels.newInputStream(channel);
     } catch (Exception e) {
       throw new BackupException("Error with reading backup file: " + e.getMessage(), e);
     }
@@ -133,7 +117,6 @@ public class GcpBackupUploader extends AbstractBackupUploader {
     return StorageOptions.newBuilder().setCredentials(getCredential(ENV_CREDS))
             .setProjectId(projectName).build().getService();
   }
-
 
   class GcpUriParseException extends IOException {
     public GcpUriParseException(String message, Throwable cause) {

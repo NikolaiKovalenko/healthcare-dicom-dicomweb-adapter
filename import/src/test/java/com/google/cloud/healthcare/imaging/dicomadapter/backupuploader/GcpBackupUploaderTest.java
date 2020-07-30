@@ -1,9 +1,8 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.storage.*;
-import com.google.cloud.storage.contrib.nio.testing.LocalStorageHelper;
+import com.google.cloud.storage.BucketInfo;
+import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.testing.RemoteStorageHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -232,13 +231,6 @@ public class GcpBackupUploaderTest {
     @Test
     public void removeBackup_Failed_OnNotExistsUploadPath() throws IOException {
        new GcpBackupUploader(NOT_EXISTS_UPLOAD_PATH, localStorage).doRemoveBackup(UNIQ_NAME_REMOVE);
-    }
-
-    private static void createUploadObject(byte[] data, String uniqName, Storage storage) throws IOException {
-        BlobId blobId = BlobId.of(gcpBackupUploader.getBucketName(),
-                gcpBackupUploader.getUploadObject().concat("/").concat(uniqName));
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-        storage.create(blobInfo, data);
     }
 
     private InputStream getInputStreamFromBytes(byte[] seq) {
