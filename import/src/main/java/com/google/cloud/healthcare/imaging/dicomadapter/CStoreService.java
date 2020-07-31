@@ -38,6 +38,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.client.HttpResponseException;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
@@ -163,31 +164,49 @@ public class CStoreService extends BasicCStoreSCP {
         response.setInt(Tag.Status, VR.US, Status.Success);
         MonitoringService.addEvent(Event.CSTORE_BYTES, countingStream.getCount());
       } catch (DicomWebException e) {
-      if (backupUploadService != null) {
-        MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
-        log.error("C-STORE request failed. Trying to resend...", e);
-        firstUploadedAttemptFailed = true;
-        backupUploadService.startUploading(destinationClient.get(), backupState.get());
-      } else {
-        MonitoringService.addEvent(Event.CSTORE_ERROR);
-        DicomServiceException serviceException = new DicomServiceException(e.getStatus(), e);
-        serviceException.setErrorComment(e.getMessage());
-        throw serviceException;
-      }
-    } catch (DicomServiceException e) {
-      reportError(e);
-      throw e;
-    } catch (IBackupUploader.BackupException e) {
+        if (backupUploadService != null) {
+          if (((HttpResponseException) e.getCause()).getStatusCode() != 409) {
+            if (((HttpResponseException) e.getCause()).getStatusCode()/500 == 1) {
+              MonitoringService.addEvent(Event.CSTORE_5xx_ERROR);
+              log.error("C-STORE request failed. Got http error with status 5xx.", e);
+            } else {
+              MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
+              log.error("C-STORE request failed. Trying to resend...", e);
+            }
+            firstUploadedAttemptFailed = true;
+            backupUploadService.startUploading(destinationClient.get(), backupState.get());
+          } else {
+            MonitoringService.addEvent(Event.CSTORE_409_ERROR);
+            log.error("C-STORE request failed. Got http error with 409.", e);
+          }
+        } else {
+          if (((HttpResponseException) e.getCause()).getStatusCode()/500 == 1) {
+            MonitoringService.addEvent(Event.CSTORE_5xx_ERROR);
+            log.error("C-STORE request failed. Got http error with status 5xx.", e);
+          } else if (((HttpResponseException) e.getCause()).getStatusCode() == 409) {
+            MonitoringService.addEvent(Event.CSTORE_409_ERROR);
+            log.error("C-STORE request failed. Got http error with 409.", e);
+          } else {
+            reportError(e);
+          }
+          DicomServiceException serviceException = new DicomServiceException(e.getStatus(), e);
+          serviceException.setErrorComment(e.getMessage());
+          throw serviceException;
+        }
+      } catch (DicomServiceException e) {
+        reportError(e);
+        throw e;
+      } catch (IBackupUploader.BackupException e) {
         MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
         log.error("Backup io processing during C-STORE request is failed : ", e);
-    } catch (Throwable e) {
-      reportError(e);
-      throw new DicomServiceException(Status.ProcessingFailure, e);
-    } finally {
-      if (firstUploadedAttemptFailed == false && backupUploadService != null) {
+      } catch (Throwable e) {
+        reportError(e);
+        throw new DicomServiceException(Status.ProcessingFailure, e);
+      } finally {
+        if (firstUploadedAttemptFailed == false && backupUploadService != null) {
         backupUploadService.removeBackup(backupState.get());
+        }
       }
-    }
   }
 
   private void reportError(Throwable e) {
