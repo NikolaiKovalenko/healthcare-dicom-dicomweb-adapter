@@ -84,7 +84,7 @@
           --dimse_aet=IMPORTADAPTER \
           --dimse_port=${_ADAPTER_PORT_WITH_LOCAL_BACKUP} \
           --dicomweb_address=https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}/dicomWeb \
-          --persistent_file_storage_location=/tmp/backupfile \
+          --persistent_file_storage_location=tmp/backupfile \
           --persistent_file_upload_retry_amount=5 \
           --verbose & trap \"exit 0\" SIGTERM; while true; do sleep 1; done"]
     waitFor: ['adapter-build']
@@ -101,7 +101,7 @@
           --dimse_aet=IMPORTADAPTER \
           --dimse_port=${_ADAPTER_PORT_WITH_GCS_BACKUP} \
           --dicomweb_address=https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}/dicomWeb \
-          --persistent_file_storage_location=gs://${_PROJECT}/${_BUCKET/} \
+          --persistent_file_storage_location=gs://${_PROJECT}/${_BUCKET} \
           --persistent_file_upload_retry_amount=5 \
           --verbose & trap \"exit 0\" SIGTERM; while true; do sleep 1; done"]
     waitFor: ['adapter-build']
@@ -142,7 +142,6 @@
       - build-tools
       - adapter-build
       - setup-dataset-and-dicom-store
-      - setup-backup-storage-and-bucket
 
   # busybox is a compact utility image
   - name: 'busybox:latest'
@@ -157,7 +156,6 @@
       - build-tools
       - adapter-build
       - setup-dataset-and-dicom-store
-      - setup-backup-storage-and-bucket
 
     # busybox is a compact utility image
   - name: 'busybox:latest'
