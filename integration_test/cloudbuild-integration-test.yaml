@@ -120,10 +120,10 @@
 
   # create storage if not exists, re-create bucket (delete if exists, then create)
   - name: ${_CLOUD_SDK_IMAGE}
-    id: setup-backup-storage-and-bucket
+    id: setup-backup-bucket
     args:
       - bash
-      - integration_test/scripts/setup-backup-storage-and-bucket.sh
+      - integration_test/scripts/setup-backup-bucket.sh
       - ${_PROJECT}
       - ${_LOCATION}
       - ${_BUCKET}
@@ -184,7 +184,7 @@
       - build-tools
       - adapter-build
       - setup-dataset-and-dicom-store
-      - setup-backup-storage-and-bucket
+      - setup-backup-bucket
 
   - name: 'busybox:latest'
     id: wait-for-storescp
@@ -521,7 +521,7 @@
       - gsutil
       - rm
       - "-r"
-      - "gs://"${_BUCKET}
+      - "gs://{${_BUCKET}}"
       - "--quiet"
 
   - name: ${_CLOUD_SDK_IMAGE}
