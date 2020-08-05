@@ -521,7 +521,7 @@
       - gsutil
       - rm
       - "-r"
-      - "gs://{${_BUCKET}}"
+      - "gs://${_BUCKET}"
       - "--quiet"
 
   - name: ${_CLOUD_SDK_IMAGE}
@@ -533,7 +533,6 @@ timeout: 1800s
 substitutions:
   _VERSION: v1
   _PROJECT: gcp-healthcare-oss-test
-  #_PROJECT: dev-idg-uvs
   _IMAGEPROJECT: cloud-healthcare-containers
   _LOCATION: us-central1
   _DATASET: healthcare-dicom-dicomweb-adapter-integration-test
@@ -554,8 +553,8 @@ substitutions:
   # Update to correct value if adding/removing steps before adapter run.
   _ADAPTER_RUN_STEP: 'step_5'
   _ADAPTER_RUN_STEP_HTTP2: 'step_6'
-  _ADAPTER_RUN_STEP_WITH_LOCAL_BACKUP: 'step_19'
-  _ADAPTER_RUN_STEP_WITH_GCS_BACKUP: 'step_20'
+  _ADAPTER_RUN_STEP_WITH_LOCAL_BACKUP: 'step_33'
+  _ADAPTER_RUN_STEP_WITH_GCS_BACKUP: 'step_34'
   _STORE_SCP_RUN_STEP: 'step_3'
   _COMMITMENT_SCU_STEP: 'step_18'
   # Deid redactor replaces Instance/Series/Study UIDs with pseudo-random value seeded from original.
