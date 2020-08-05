@@ -106,17 +106,6 @@ public class LocalBackupUploaderTest {
     localBackupUploader.doRemoveBackup("some_file");
   }
 
-  @Test
-  public void doReadBackup_Failed_OnEmptyFile() throws IOException {
-    Files.createDirectories(BACKUP_PATH);
-    byte [] emptyBytes = {};
-    Files.write(UNIQUE_FILE_PATH_2, emptyBytes);
-
-    exceptionRule.expect(IBackupUploader.BackupException.class);
-    exceptionRule.expectMessage("No data in backup file.");
-    localBackupUploader.doReadBackup(UNIQUE_FILE_NAME_2);
-  }
-
   private InputStream getInputStreamFromBytes(byte[] seq) {
     return new ByteArrayInputStream(seq);
   }

@@ -36,8 +36,7 @@ public class GcpBackupUploader extends AbstractBackupUploader {
   }
 
   @Override
-  public void doWriteBackup(InputStream backupData, String uniqueFileName)
-          throws BackupException {
+  public void doWriteBackup(InputStream backupData, String uniqueFileName) throws BackupException {
     try {
       if (backupData == null) {
         throw new BackupException("Backup data is null");
@@ -80,8 +79,8 @@ public class GcpBackupUploader extends AbstractBackupUploader {
       projectName = segments.get(2);
       bucketName = segments.get(3);
       uploadObject = new URIBuilder()
-              .setPathSegments(segments.subList(4, segments.size()))
-              .getPath().substring(1);
+          .setPathSegments(segments.subList(4, segments.size()))
+          .getPath().substring(1);
       validatePathParameter(projectName, "project name");
       validatePathParameter(bucketName, "bucket name");
       validatePathParameter(uploadObject, "upload object");
@@ -103,18 +102,16 @@ public class GcpBackupUploader extends AbstractBackupUploader {
   }
 
   public Credentials getCredential(String env) throws IOException {
-    return GoogleCredentials
-            .fromStream(new FileInputStream(System.getenv(env)));
+    return GoogleCredentials.fromStream(new FileInputStream(System.getenv(env)));
   }
 
   private String getFullUploadObject(String uniqueFileName) {
-    return new URIBuilder().setPathSegments(uploadObject, uniqueFileName)
-            .getPath().substring(1);
+    return new URIBuilder().setPathSegments(uploadObject, uniqueFileName).getPath().substring(1);
   }
 
   private Storage getStorage() throws IOException {
     return StorageOptions.newBuilder().setCredentials(getCredential(ENV_CREDS))
-            .setProjectId(projectName).build().getService();
+        .setProjectId(projectName).build().getService();
   }
 
   class GcpUriParseException extends IOException {

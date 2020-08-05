@@ -297,10 +297,10 @@ The following arguments are used to configure the mode:
 * --min_upload_delay: minimum delay before upload backup file (ms) (default 100ms).
 * --max_waiting_time_between_uploads: maximum waiting time between uploads (ms) (default 5000ms).
 
-If the flag --persistent_file_storage_location is not used then loading occurs without writing a temporary file
+If the flag --persistent_file_storage_location is not used then loading occurs without writing a temporary file.
 
 if the value for the flag --persistent_file_storage_location is specified in the format gs://project-id/bucket-id/some-object,
- the file will be written to the specified project bucket. It is also necessary to set the system variable [GOOGLE_APPLICATION_CREDENTIALS](https://cloud.google.com/healthcare/docs/how-tos/authentication#setting_the_environment_variables) = path_to_file_with_json_data
+ the file will be written to the specified project bucket. It is also necessary to set the system variable [GOOGLE_APPLICATION_CREDENTIALS](https://cloud.google.com/healthcare/docs/how-tos/authentication#setting_the_environment_variables) = path_to_file_with_json_data.
 
 If you are using Kubernetes, then in the file `dicom_adapter.yaml` change the arguments in the file as follows:
 
@@ -312,7 +312,7 @@ If you are using Kubernetes, then in the file `dicom_adapter.yaml` change the ar
             - "--max_waiting_time_between_uploads=5000"
 ```
 
-if you are using import adapter locally : 
+if you are using import adapter locally: 
 ```shell
 gradle run -Dexec.args="--dimse_aet=IMPORTADAPTER --dimse_port=4008 --dicomweb_address=http://localhost:80 --persistent_file_storage_location=/tmp/backupfile --persistent_file_upload_retry_amount=5 --min_upload_delay=100 --max_waiting_time_between_uploads=5000"
 ```

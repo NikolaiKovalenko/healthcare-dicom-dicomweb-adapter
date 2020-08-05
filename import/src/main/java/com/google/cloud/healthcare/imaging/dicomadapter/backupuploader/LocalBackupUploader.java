@@ -1,12 +1,10 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class LocalBackupUploader extends AbstractBackupUploader {
 
@@ -19,11 +17,8 @@ public class LocalBackupUploader extends AbstractBackupUploader {
     try {
       validatePathParameter(uniqueFileName, "unique file name");
       Files.createDirectories(Paths.get(getUploadFilePath()));
-      try (FileOutputStream fos =
-               new FileOutputStream(Paths.get(getUploadFilePath(), uniqueFileName).toFile())) {
-        byte[] bytes = inputStream.readAllBytes();
-        fos.write(bytes, 0, bytes.length);
-      }
+
+      Files.copy(inputStream, Paths.get(getUploadFilePath(), uniqueFileName), StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException ex) {
       throw new BackupException("Error with writing backup file.", ex);
     }
@@ -31,14 +26,8 @@ public class LocalBackupUploader extends AbstractBackupUploader {
 
   @Override
   public InputStream doReadBackup(String uniqueFileName) throws BackupException {
-    try (FileInputStream fin =
-                 new FileInputStream(Paths.get(getUploadFilePath(), uniqueFileName).toFile())) {
-      byte[] buffer = new byte[fin.available()];
-      fin.read(buffer, 0, fin.available());
-      if (buffer.length == 0) {
-        throw new BackupException("No data in backup file.");
-      }
-      return new ByteArrayInputStream(buffer);
+    try {
+      return Files.newInputStream(Paths.get(getUploadFilePath(), uniqueFileName));
     } catch (IOException ex) {
       throw new BackupException("Error with reading backup file: " + ex.getMessage(), ex);
     }
