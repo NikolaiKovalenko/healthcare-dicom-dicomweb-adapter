@@ -3,19 +3,23 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class LocalBackupUploader implements IBackupUploader {
+public class LocalBackupUploader extends AbstractBackupUploader {
+
+  public LocalBackupUploader(String uploadFilePath) {
+    super(uploadFilePath);
+  }
 
   @Override
-  public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName)
-      throws BackupException {
+  public void doWriteBackup(InputStream inputStream, String uniqueFileName) throws BackupException {
     try {
-      Files.createDirectories(Paths.get(uploadFilePath));
+      Files.createDirectories(Paths.get(getUploadFilePath()));
       try (FileOutputStream fos =
-          new FileOutputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
-        fos.write(backupData, 0, backupData.length);
+               new FileOutputStream(Paths.get(getUploadFilePath(), uniqueFileName).toFile())) {
+        //fos.write(backupData, 0, backupData.length); //fixme
       }
     } catch (IOException ex) {
       throw new BackupException("Error with writing backup file.", ex);
@@ -23,24 +27,24 @@ public class LocalBackupUploader implements IBackupUploader {
   }
 
   @Override
-  public byte[] doReadBackup(String uploadFilePath, String uniqueFileName) throws BackupException {
+  public InputStream doReadBackup(String uniqueFileName) throws BackupException {
     try (FileInputStream fin =
-        new FileInputStream(Paths.get(uploadFilePath, uniqueFileName).toFile())) {
+             new FileInputStream(Paths.get(getUploadFilePath(), uniqueFileName).toFile())) {
       byte[] buffer = new byte[fin.available()];
       fin.read(buffer, 0, fin.available());
       if (buffer.length == 0) {
         throw new BackupException("No data in backup file.");
       }
-      return buffer;
+      return null /*buffer*/; //fixme
     } catch (IOException ex) {
       throw new BackupException("Error with reading backup file : " + ex.getMessage(), ex);
     }
   }
 
   @Override
-  public void removeBackup(String uploadFilePath, String uniqueFileName) throws BackupException {
+  public void doRemoveBackup(String uniqueFileName) throws BackupException {
     try {
-      Files.delete(Paths.get(uploadFilePath, uniqueFileName));
+      Files.delete(Paths.get(getUploadFilePath(), uniqueFileName));
     } catch (IOException e) {
       throw new BackupException("Error with removing backup file.", e);
     }

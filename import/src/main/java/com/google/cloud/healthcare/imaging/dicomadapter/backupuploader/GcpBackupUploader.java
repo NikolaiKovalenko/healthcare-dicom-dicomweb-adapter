@@ -1,21 +1,24 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
-public class GcpBackupUploader implements IBackupUploader {
+import java.io.InputStream;
 
-  @Override
-  public void doWriteBackup(byte[] backupData, String uploadFilePath, String uniqueFileName)
-      throws BackupException {
-    // todo: implement_me
+public class GcpBackupUploader extends AbstractBackupUploader {
+
+  public GcpBackupUploader(String uploadFilePath) {
+    super(uploadFilePath);
   }
 
   @Override
-  public byte[] doReadBackup(String uploadFilePath, String uniqueFileName) throws BackupException {
-    return new byte[0];
-    // todo: implement_me
+  public void doWriteBackup(InputStream inputStream, String uniqueFileName) throws BackupException {
   }
 
   @Override
-  public void removeBackup(String uploadFilePath, String uniqueFileName) throws BackupException {
-    // todo: implement_me
+  public InputStream doReadBackup(String uniqueFileName) throws BackupException {
+    return null;
+  }
+
+  @Override
+  public void doRemoveBackup(String uniqueFileName) throws BackupException {
+
   }
 }
