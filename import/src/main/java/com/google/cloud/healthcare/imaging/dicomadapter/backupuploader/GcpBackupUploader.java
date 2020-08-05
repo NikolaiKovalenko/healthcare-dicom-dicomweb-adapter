@@ -85,7 +85,7 @@ public class GcpBackupUploader extends AbstractBackupUploader {
       validatePathParameter(bucketName, "bucket name");
       validatePathParameter(uploadObject, "upload object");
     } catch (Exception e) {
-      throw new GcpUriParseException("Invalid upload path :" + e.getMessage(), e);
+      throw new GcpUriParseException("Invalid upload path: " + e.getMessage(), e);
     }
   }
 
