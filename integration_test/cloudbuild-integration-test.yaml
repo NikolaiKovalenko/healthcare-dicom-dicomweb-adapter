@@ -532,8 +532,8 @@
 timeout: 1800s
 substitutions:
   _VERSION: v1
-  _PROJECT: gcp-healthcare-oss-test
-  #_PROJECT: dev-idg-uvs
+  #_PROJECT: gcp-healthcare-oss-test
+  _PROJECT: dev-idg-uvs
   _IMAGEPROJECT: cloud-healthcare-containers
   _LOCATION: us-central1
   _DATASET: healthcare-dicom-dicomweb-adapter-integration-test
