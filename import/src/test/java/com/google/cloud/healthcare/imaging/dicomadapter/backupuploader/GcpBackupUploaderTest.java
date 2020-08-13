@@ -10,7 +10,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
@@ -24,39 +23,38 @@ public class GcpBackupUploaderTest {
     private static byte[] BYTE_SEQ_1 = new byte[]{0, 1, 2, 5, 4, 3, 5, 4, 2, 0, 4, 5, 4, 7};
     private static byte[] BYTE_SEQ_2 = new byte[]{1, 5, 7, 3, 5, 4, 0, 1, 3};
     private static byte[] BYTES_SEQ = new byte[]{0, 1, 2, 5, 4, 3, 5, 4, 2, 0, 4, 5, 4, 7};
+    private static String UPLOAD_PATH = "";
+    private static String BUCKET_NAME = "";
 
     private static final String UNIQUE_FILE_NAME_1 = "uniq1";
     private static final String UNIQUE_FILE_NAME_2 = "uniq2";
     private static final String NOT_EXISTS_UPLOAD_PATH = "gs://testing-healthcare-adapter/some-backup";
     private static final String UNIQ_NAME = "uniq";
     private static final String UNIQ_NAME_REMOVE = "uniq_remove";
-    private static final String ENV_CREDS = "GOOGLE_APPLICATION_CREDENTIALS";
     private static final String AUTH_TYPE = "OAuth2";
-    private static final String UPLOAD_PATH = "gs://testing-healthcare-adapter/test-backup";
-    private static final String GCP_PROJECT_ID = "dev-idg-uvs";
+    private static final String GCP_PROJECT_ID = "test-project-id";
     private static final String OAUTHSCOPES = "https://www.googleapis.com/auth/cloud-healthcare";
     private static final String UPLOAD_PATH_EMPTY_BUCKET_NAME = "gs:/// ";
     private static final String UPLOAD_PATH_SPACE_BUCKET_NAME = "gs:// / ";
     private static final String UPLOAD_PATH_EMPTY_UPLOAD_OBJECT = "gs:///some//";
     private static final String UPLOAD_PATH_SPACE_UPLOAD_OBJECT = "gs://some/ ";
-    private static final String PROJECT_NAME = "dev-idg-uvs";
-    private static final String BUCKET_NAME = "testing-healthcare-adapter";
     private static final String UPLOAD_OBJECT = "test-backup";
 
     /**
     * To create an instance of the Storage class, the tests used RemoteStorageHelper
     * because LocalStorageHelper returns an "method not implemented yet" error when
-    * trying to write data to the bucket. The tests use a temporary bucket that is
-    * deleted after all tests have run
+    * trying to write data to the bucket. The tests use a temporary bucket with random
+    * id that is deleted after all tests have run
      */
     @BeforeClass
     public static void setUp() {
         try {
-            RemoteStorageHelper helper =
-                    RemoteStorageHelper.create(PROJECT_NAME, new FileInputStream(System.getenv(ENV_CREDS)));
+            BUCKET_NAME = RemoteStorageHelper.generateBucketName();
+            UPLOAD_PATH = "gs://".concat(BUCKET_NAME).concat("/test-backup");
+            RemoteStorageHelper helper = RemoteStorageHelper.create();
             localStorage = helper.getOptions().getService();
             localStorage.create(BucketInfo.of(BUCKET_NAME));
-            gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, localStorage);
+            gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, GCP_PROJECT_ID, localStorage);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,7 +66,7 @@ public class GcpBackupUploaderTest {
     @AfterClass
     public static void tearDown() {
         try {
-            RemoteStorageHelper.forceDelete(localStorage, BUCKET_NAME, 2, TimeUnit.SECONDS);
+            RemoteStorageHelper.forceDelete(localStorage, BUCKET_NAME, 1, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
@@ -79,9 +77,9 @@ public class GcpBackupUploaderTest {
 
     @Test
     public void parseUri() throws IOException {
-        gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, localStorage);
+        gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, GCP_PROJECT_ID, localStorage);
 
-        assertThat(gcpBackupUploader.getProjectId()).isEqualTo(PROJECT_NAME);
+        assertThat(gcpBackupUploader.getProjectId()).isEqualTo(GCP_PROJECT_ID);
         assertThat(gcpBackupUploader.getBucketName()).isEqualTo(BUCKET_NAME);
         assertThat(gcpBackupUploader.getUploadObject()).isEqualTo(UPLOAD_OBJECT);
     }
@@ -91,7 +89,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader("", localStorage);
+        new GcpBackupUploader("", GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -99,7 +97,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader(" ", localStorage);
+        new GcpBackupUploader(" ", GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -107,7 +105,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader(UPLOAD_PATH_EMPTY_BUCKET_NAME, localStorage);
+        new GcpBackupUploader(UPLOAD_PATH_EMPTY_BUCKET_NAME, GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -115,7 +113,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader(UPLOAD_PATH_SPACE_BUCKET_NAME, localStorage);
+        new GcpBackupUploader(UPLOAD_PATH_SPACE_BUCKET_NAME, GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -123,7 +121,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader(UPLOAD_PATH_EMPTY_UPLOAD_OBJECT, localStorage);
+        new GcpBackupUploader(UPLOAD_PATH_EMPTY_UPLOAD_OBJECT, GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -131,7 +129,7 @@ public class GcpBackupUploaderTest {
         exceptionRule.expect(GcpBackupUploader.GcpUriParseException.class);
         exceptionRule.expectMessage("Invalid upload path");
 
-        new GcpBackupUploader(UPLOAD_PATH_SPACE_UPLOAD_OBJECT, localStorage);
+        new GcpBackupUploader(UPLOAD_PATH_SPACE_UPLOAD_OBJECT, GCP_PROJECT_ID, localStorage);
     }
 
     @Test
@@ -153,7 +151,7 @@ public class GcpBackupUploaderTest {
 
     @Test
     public void readWriteAndRemoveDifferentFiles() throws IOException {
-        gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, localStorage);
+        gcpBackupUploader = new GcpBackupUploader(UPLOAD_PATH, GCP_PROJECT_ID, localStorage);
         gcpBackupUploader.doWriteBackup(getInputStreamFromBytes(BYTE_SEQ_1), UNIQUE_FILE_NAME_1);
         gcpBackupUploader.doWriteBackup(getInputStreamFromBytes(BYTE_SEQ_2), UNIQUE_FILE_NAME_2);
         InputStream inputStream1 = gcpBackupUploader.doReadBackup(UNIQUE_FILE_NAME_1);
@@ -200,7 +198,7 @@ public class GcpBackupUploaderTest {
 
     @Test
     public void removeBackup_Failed_OnNotExistsUploadPath() throws IOException {
-       new GcpBackupUploader(NOT_EXISTS_UPLOAD_PATH, localStorage).doRemoveBackup(UNIQ_NAME_REMOVE);
+       new GcpBackupUploader(NOT_EXISTS_UPLOAD_PATH, GCP_PROJECT_ID, localStorage).doRemoveBackup(UNIQ_NAME_REMOVE);
     }
 
     private InputStream getInputStreamFromBytes(byte[] seq) {
