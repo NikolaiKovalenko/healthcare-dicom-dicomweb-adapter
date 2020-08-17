@@ -8,10 +8,14 @@ import com.google.cloud.WriteChannel;
 import com.google.cloud.storage.*;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -410,20 +414,22 @@ public class FakeStorage implements Storage {
 
     class FakeChannel implements ReadChannel {
 
-        byte[] buffer;
+        ReadableByteChannel readableByteChannel;
 
         public FakeChannel(byte[] buffer) {
-            this.buffer = buffer;
+            this.readableByteChannel = Channels.newChannel(new ByteArrayInputStream(buffer));
         }
 
         @Override
         public boolean isOpen() {
-            return buffer.length > 0;
+            return readableByteChannel.isOpen();
         }
 
         @Override
         public void close() {
-
+            try {
+                readableByteChannel.close();
+            } catch (IOException e) { }
         }
 
         @Override
@@ -442,10 +448,8 @@ public class FakeStorage implements Storage {
         }
 
         @Override
-        public int read(ByteBuffer dst) {
-            dst = ByteBuffer.allocate(buffer.length);
-            dst.put(buffer);
-            return -1;
+        public int read(ByteBuffer dst) throws IOException {
+            return readableByteChannel.read(dst);
         }
     }
 }
