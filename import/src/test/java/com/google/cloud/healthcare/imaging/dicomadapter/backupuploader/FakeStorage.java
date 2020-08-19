@@ -146,7 +146,7 @@ public class FakeStorage implements Storage {
         try {
             fakeObjects.remove(Paths.get(bucket, blob).toString());
             return true;
-        } catch (Exception igrored){
+        } catch (Exception ignored){
             return false;
         }
     }
