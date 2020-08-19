@@ -8,7 +8,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,18 +53,6 @@ public class GcpBackupUploaderTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Clears all possible backup data after all tests after 2 second.
-     */
-    @AfterClass
-    public static void tearDown() {
-//        try {
-//            RemoteStorageHelper.forceDelete(localStorage, BUCKET_NAME, 1, TimeUnit.SECONDS);
-//        } catch (InterruptedException | ExecutionException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Rule
@@ -153,8 +140,8 @@ public class GcpBackupUploaderTest {
         InputStream inputStream1 = gcpBackupUploader.doReadBackup(UNIQUE_FILE_NAME_1);
         InputStream inputStream2 = gcpBackupUploader.doReadBackup(UNIQUE_FILE_NAME_2);
 
-        assertThat(inputStream1).isNotNull();
-        assertThat(inputStream2).isNotNull();
+        assertThat(inputStream1.readAllBytes()).isEqualTo(BYTE_SEQ_1);
+        assertThat(inputStream2.readAllBytes()).isEqualTo(BYTE_SEQ_2);
 
         gcpBackupUploader.doRemoveBackup(UNIQUE_FILE_NAME_1);
         gcpBackupUploader.doRemoveBackup(UNIQUE_FILE_NAME_2);
