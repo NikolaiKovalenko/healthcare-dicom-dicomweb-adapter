@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 public class GcpBackupUploader extends AbstractBackupUploader {
   private String projectId;
   private String bucketName;
-  private String uploadObject;
+  private String uploadFolder;
   private Storage storage;
 
   private static final String GCP_PATH_PREFIX = "gs://";
@@ -82,10 +82,10 @@ public class GcpBackupUploader extends AbstractBackupUploader {
       String route = uploadFilePath.replaceAll(GCP_PATH_PREFIX, "");
       String[] ar = route.split("/");
       bucketName = ar[0];
-      uploadObject = String.join("/", Arrays.copyOfRange(ar, 1, ar.length));
+      uploadFolder = String.join("/", Arrays.copyOfRange(ar, 1, ar.length));
       validatePathParameter(projectId, "project name");
       validatePathParameter(bucketName, "bucket name");
-      validatePathParameter(uploadObject, "upload object");
+      validatePathParameter(uploadFolder, "upload object");
     } catch (Exception e) {
       throw new GcpUriParseException("Invalid upload path: " + e.getMessage(), e);
     }
@@ -99,8 +99,8 @@ public class GcpBackupUploader extends AbstractBackupUploader {
     return bucketName;
   }
 
-  public String getUploadObject() {
-    return uploadObject;
+  public String getUploadFolder() {
+    return uploadFolder;
   }
 
   public Credentials getCredential(String oauthScopes) throws IOException {
@@ -113,7 +113,7 @@ public class GcpBackupUploader extends AbstractBackupUploader {
   }
 
   private String getFullUploadObject(String uniqueFileName) {
-    return uploadObject.concat("/").concat(uniqueFileName);
+    return uploadFolder.concat("/").concat(uniqueFileName);
   }
 
   private Storage getStorage(String oauthScopes) throws IOException {
