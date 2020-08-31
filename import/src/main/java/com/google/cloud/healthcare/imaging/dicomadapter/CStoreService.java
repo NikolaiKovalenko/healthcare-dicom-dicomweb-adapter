@@ -17,6 +17,7 @@ package com.google.cloud.healthcare.imaging.dicomadapter;
 import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.IDicomWebClient.DicomWebException;
 import com.google.cloud.healthcare.deid.redactor.DicomRedactor;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.DicomStreamUtil;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
 import com.google.common.io.CountingInputStream;
@@ -160,9 +161,9 @@ public class CStoreService extends BasicCStoreSCP {
     }
   }
 
-  private IDicomWebClient selectDestinationClient(String callingAet, Attributes attrs){
-    for(DestinationFilter filter: destinationMap.keySet()){
-      if(filter.matches(callingAet, attrs)){
+  private IDicomWebClient selectDestinationClient(String callingAet, Attributes attrs) {
+    for (DestinationFilter filter: destinationMap.keySet()) {
+      if (filter.matches(callingAet, attrs)){
         return destinationMap.get(filter);
       }
     }

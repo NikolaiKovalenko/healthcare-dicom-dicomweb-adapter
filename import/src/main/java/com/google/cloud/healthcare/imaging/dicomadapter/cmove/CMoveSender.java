@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.cloud.healthcare.imaging.dicomadapter.cstoresender;
+package com.google.cloud.healthcare.imaging.dicomadapter.cmove;
 
 import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.imaging.dicomadapter.AetDictionary;
 import com.google.cloud.healthcare.imaging.dicomadapter.CMoveService;
 import com.google.cloud.healthcare.imaging.dicomadapter.DicomClient;
+import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISender;
 import com.google.common.io.CountingInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,14 +26,14 @@ import org.dcm4che3.net.ApplicationEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CStoreSender implements ICStoreSender {
+public class CMoveSender implements ISender {
 
   private static Logger log = LoggerFactory.getLogger(CMoveService.class);
 
   private final ApplicationEntity applicationEntity;
   private final IDicomWebClient dicomWebClient;
 
-  public CStoreSender(ApplicationEntity applicationEntity, IDicomWebClient dicomWebClient) {
+  public CMoveSender(ApplicationEntity applicationEntity, IDicomWebClient dicomWebClient) {
     this.applicationEntity = applicationEntity;
     this.dicomWebClient = dicomWebClient;
   }

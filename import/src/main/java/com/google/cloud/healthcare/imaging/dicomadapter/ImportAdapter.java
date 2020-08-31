@@ -24,14 +24,13 @@ import com.google.cloud.healthcare.deid.redactor.DicomRedactor;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig.TagFilterProfile;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupFlags;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.GcpBackupUploader;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploadService;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupUploadService;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.LocalBackupUploader;
-import com.google.cloud.healthcare.imaging.dicomadapter.cstoresender.CStoreSenderFactory;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupFlags;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.DelayCalculator;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.GcpBackupUploader;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupUploadService;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.LocalBackupUploader;
+import com.google.cloud.healthcare.imaging.dicomadapter.cmove.CMoveSenderFactory;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
 import org.dcm4che3.net.Device;
@@ -128,9 +127,9 @@ public class ImportAdapter {
 
     // Handle C-MOVE
     String cstoreSubAet = flags.dimseCmoveAET.equals("") ? flags.dimseAET : flags.dimseCmoveAET;
-    CStoreSenderFactory cStoreSenderFactory = new CStoreSenderFactory(cstoreSubAet, dicomWebClient);
+    CMoveSenderFactory cMoveSenderFactory = new CMoveSenderFactory(cstoreSubAet, dicomWebClient);
     AetDictionary aetDict = new AetDictionary(flags.aetDictionaryInline, flags.aetDictionaryPath);
-    CMoveService cMoveService = new CMoveService(dicomWebClient, aetDict, cStoreSenderFactory);
+    CMoveService cMoveService = new CMoveService(dicomWebClient, aetDict, cMoveSenderFactory);
     serviceRegistry.addDicomService(cMoveService);
 
     // Handle Storage Commitment N-ACTION

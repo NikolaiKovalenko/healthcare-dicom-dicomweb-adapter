@@ -1,4 +1,4 @@
-package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
+package com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup;
 
 import com.google.cloud.healthcare.IDicomWebClient;
 import java.io.InputStream;

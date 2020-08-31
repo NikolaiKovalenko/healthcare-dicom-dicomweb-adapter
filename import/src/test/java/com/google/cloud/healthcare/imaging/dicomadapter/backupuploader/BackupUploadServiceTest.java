@@ -1,6 +1,6 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
-import static com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader.BackupException;
+import static com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader.BackupException;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -16,6 +16,11 @@ import static org.mockito.Mockito.when;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.IDicomWebClient.DicomWebException;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupFlags;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupState;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupUploadService;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.DelayCalculator;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader;
 import org.dcm4che3.net.Status;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;

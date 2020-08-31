@@ -2,6 +2,7 @@ package com.google.cloud.healthcare.imaging.dicomadapter.backupuploader;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupState;
 import org.junit.Test;
 
 public class BackupStateTest {
