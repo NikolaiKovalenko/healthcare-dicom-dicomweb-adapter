@@ -138,9 +138,7 @@ public class CStoreService extends BasicCStoreSCP {
       MonitoringService.addEvent(Event.CSTORE_BYTES, countingStream.getCount());
     } catch (DicomWebException e) {
       reportError(e);
-      DicomServiceException serviceException = new DicomServiceException(e.getStatus(), e);
-      serviceException.setErrorComment(e.getMessage());
-      throw serviceException;
+      throw new DicomServiceException(e.getStatus(), e);
     } catch (DicomServiceException e) {
       reportError(e);
       throw e;
