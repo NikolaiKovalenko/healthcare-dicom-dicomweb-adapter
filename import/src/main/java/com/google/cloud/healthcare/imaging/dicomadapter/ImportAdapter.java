@@ -117,7 +117,7 @@ public class ImportAdapter {
 
     DicomRedactor redactor = configureRedactor(flags);
     CStoreService cStoreService =
-        new CStoreService(defaultCstoreDicomWebClient, destinationMap, redactor, flags.transcodeToSyntax, backupUploadService);
+        new CStoreService(defaultCstoreDicomWebClient, destinationMap, redactor, flags.transcodeToSyntax/*, backupUploadService*/);
     serviceRegistry.addDicomService(cStoreService);
 
     // Handle C-FIND
