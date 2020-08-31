@@ -153,8 +153,8 @@ public final class CMoveServiceTest {
         },
         () -> new ISender() {
           @Override
-          public long cstore(AetDictionary.Aet target, String studyUid, String seriesUid,
-              String sopInstanceUid, String sopClassUid)
+          public long cmove(AetDictionary.Aet target, String studyUid, String seriesUid,
+                            String sopInstanceUid, String sopClassUid)
               throws IDicomWebClient.DicomWebException, IOException, InterruptedException {
             throw new IDicomWebClient.DicomWebException("CStore Fail");
           }
@@ -184,11 +184,11 @@ public final class CMoveServiceTest {
           private int attempts = 0;
 
           @Override
-          public long cstore(AetDictionary.Aet target,
-              String studyUid,
-              String seriesUid,
-              String sopInstanceUid,
-              String sopClassUid)
+          public long cmove(AetDictionary.Aet target,
+                            String studyUid,
+                            String seriesUid,
+                            String sopInstanceUid,
+                            String sopClassUid)
               throws IDicomWebClient.DicomWebException, IOException, InterruptedException {
             if (++attempts >= 2) {
               throw new IDicomWebClient.DicomWebException("CStore Fail");
@@ -218,8 +218,8 @@ public final class CMoveServiceTest {
         },
         () -> new ISender() {
           @Override
-          public long cstore(AetDictionary.Aet target, String studyUid, String seriesUid,
-              String sopInstanceUid, String sopClassUid)
+          public long cmove(AetDictionary.Aet target, String studyUid, String seriesUid,
+                            String sopInstanceUid, String sopClassUid)
               throws IDicomWebClient.DicomWebException, IOException, InterruptedException {
             throw new InterruptedException();
           }
@@ -307,8 +307,8 @@ public final class CMoveServiceTest {
   private class CStoreSenderTest implements ISender {
 
     @Override
-    public long cstore(AetDictionary.Aet target, String studyUid, String seriesUid,
-        String sopInstanceUid, String sopClassUid)
+    public long cmove(AetDictionary.Aet target, String studyUid, String seriesUid,
+                      String sopInstanceUid, String sopClassUid)
         throws IDicomWebClient.DicomWebException, IOException, InterruptedException {
       return 0;
     }

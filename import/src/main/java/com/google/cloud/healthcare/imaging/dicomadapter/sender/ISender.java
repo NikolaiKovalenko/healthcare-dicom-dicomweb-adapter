@@ -24,7 +24,7 @@ public interface ISender extends Closeable {
   /**
    * Sends instance via c-store (or test stub) to target AET, returns bytes sent
    */
-  long cstore(
+  long cmove(
       AetDictionary.Aet target,
       String studyUid,
       String seriesUid,

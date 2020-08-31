@@ -39,11 +39,11 @@ public class CMoveSender implements ISender {
   }
 
   @Override
-  public long cstore(AetDictionary.Aet target,
-      String studyUid,
-      String seriesUid,
-      String sopInstanceUid,
-      String sopClassUid)
+  public long cmove(AetDictionary.Aet target,
+                    String studyUid,
+                    String seriesUid,
+                    String sopInstanceUid,
+                    String sopClassUid)
       throws IDicomWebClient.DicomWebException, IOException, InterruptedException {
     String wadoUri =
         String.format("studies/%s/series/%s/instances/%s", studyUid, seriesUid, sopInstanceUid);
