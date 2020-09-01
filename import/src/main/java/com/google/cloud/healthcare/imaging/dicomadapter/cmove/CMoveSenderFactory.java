@@ -16,8 +16,6 @@ package com.google.cloud.healthcare.imaging.dicomadapter.cmove;
 
 import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.imaging.dicomadapter.DeviceUtil;
-import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISender;
-import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISenderFactory;
 import org.dcm4che3.net.ApplicationEntity;
 import org.dcm4che3.net.Connection;
 import org.slf4j.Logger;

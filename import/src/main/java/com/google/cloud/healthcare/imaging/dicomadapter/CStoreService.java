@@ -14,10 +14,12 @@
 
 package com.google.cloud.healthcare.imaging.dicomadapter;
 
-import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.IDicomWebClient.DicomWebException;
 import com.google.cloud.healthcare.deid.redactor.DicomRedactor;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.DicomStreamUtil;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.destination.IDestinationClientFactory;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.destination.DestinationHolder;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.multipledest.IMultipleDestinationSendService;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
 import com.google.common.io.CountingInputStream;
@@ -28,16 +30,15 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorCompletionService;
+
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.imageio.codec.Transcoder;
-import org.dcm4che3.io.DicomInputStream;
 import org.dcm4che3.net.Association;
 import org.dcm4che3.net.PDVInputStream;
 import org.dcm4che3.net.Status;
@@ -55,20 +56,19 @@ public class CStoreService extends BasicCStoreSCP {
 
   private static Logger log = LoggerFactory.getLogger(CStoreService.class);
 
-  private final IDicomWebClient defaultDicomWebClient;
-  private final Map<DestinationFilter, IDicomWebClient> destinationMap;
+  private final IDestinationClientFactory destinationClientFactory;
+  private final IMultipleDestinationSendService multipleSendService;
   private final DicomRedactor redactor;
   private final String transcodeToSyntax;
 
-  CStoreService(IDicomWebClient defaultDicomWebClient,
-      Map<DestinationFilter, IDicomWebClient> destinationMap,
-      DicomRedactor redactor, String transcodeToSyntax) {
-    this.defaultDicomWebClient = defaultDicomWebClient;
-    this.destinationMap =
-        destinationMap != null && destinationMap.size() > 0 ? destinationMap : null;
+  CStoreService(IDestinationClientFactory destinationClientFactory,
+                DicomRedactor redactor,
+                String transcodeToSyntax,
+                IMultipleDestinationSendService multipleSendService) {
+    this.destinationClientFactory = destinationClientFactory;
     this.redactor = redactor;
-    this.transcodeToSyntax =
-        transcodeToSyntax != null && transcodeToSyntax.length() > 0 ? transcodeToSyntax : null;
+    this.transcodeToSyntax = transcodeToSyntax != null && transcodeToSyntax.length() > 0 ? transcodeToSyntax : null;
+    this.multipleSendService = multipleSendService;
 
     if(this.transcodeToSyntax != null) {
       log.info("Transcoding to: " + transcodeToSyntax);
@@ -82,7 +82,7 @@ public class CStoreService extends BasicCStoreSCP {
       Attributes request,
       PDVInputStream inPdvStream,
       Attributes response)
-      throws DicomServiceException, IOException {
+      throws IOException {
     try {
       MonitoringService.addEvent(Event.CSTORE_REQUEST);
 
@@ -93,24 +93,10 @@ public class CStoreService extends BasicCStoreSCP {
       validateParam(sopClassUID, "AffectedSOPClassUID");
       validateParam(sopInstanceUID, "AffectedSOPInstanceUID");
 
-      final CountingInputStream countingStream;
-      final IDicomWebClient destinationClient;
-      if(destinationMap != null) {
-        DicomInputStream inDicomStream  = new DicomInputStream(inPdvStream);
-        inDicomStream.mark(Integer.MAX_VALUE);
-        Attributes attrs = inDicomStream.readDataset(-1, Tag.PixelData);
-        inDicomStream.reset();
+      DestinationHolder destinationHolder =
+          destinationClientFactory.create(association.getAAssociateAC().getCallingAET(), inPdvStream);
 
-        countingStream = new CountingInputStream(inDicomStream);
-        destinationClient = selectDestinationClient(association.getAAssociateAC().getCallingAET(), attrs);
-      } else {
-        countingStream = new CountingInputStream(inPdvStream);
-        destinationClient = defaultDicomWebClient;
-      }
-
-      InputStream inWithHeader =
-          DicomStreamUtil.dicomStreamWithFileMetaHeader(
-              sopInstanceUID, sopClassUID, transferSyntax, countingStream);
+      final CountingInputStream countingStream = destinationHolder.getCountingInputStream();
 
       List<StreamProcessor> processorList = new ArrayList<>();
       if (redactor != null) {
@@ -127,9 +113,25 @@ public class CStoreService extends BasicCStoreSCP {
         });
       }
 
-      processorList.add((inputStream, outputStream) -> {
-        destinationClient.stowRs(inputStream);
-      });
+      if (multipleSendService != null) {
+        processorList.add((inputStream, outputStream) -> {
+          multipleSendService.start(
+              destinationHolder.getHealthcareDestinations(),
+              destinationHolder.getDicomDestinations(),
+              inputStream,
+              sopClassUID,
+              sopInstanceUID
+            );
+        });
+      } else {
+        processorList.add((inputStream, outputStream) -> {
+          destinationHolder.getSingleDestination().stowRs(inputStream);
+        });
+      }
+
+      InputStream inWithHeader =
+          DicomStreamUtil.dicomStreamWithFileMetaHeader(
+              sopInstanceUID, sopClassUID, transferSyntax, countingStream);
 
       processStream(association.getApplicationEntity().getDevice().getExecutor(),
           inWithHeader, processorList);
@@ -157,15 +159,6 @@ public class CStoreService extends BasicCStoreSCP {
     if (value == null || value.trim().length() == 0) {
       throw new DicomServiceException(Status.CannotUnderstand, "Mandatory tag empty: " + name);
     }
-  }
-
-  private IDicomWebClient selectDestinationClient(String callingAet, Attributes attrs) {
-    for (DestinationFilter filter: destinationMap.keySet()) {
-      if (filter.matches(callingAet, attrs)){
-        return destinationMap.get(filter);
-      }
-    }
-    return defaultDicomWebClient;
   }
 
   private void processStream(Executor underlyingExecutor, InputStream inputStream,

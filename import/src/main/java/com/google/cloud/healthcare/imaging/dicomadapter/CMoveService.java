@@ -15,8 +15,8 @@
 package com.google.cloud.healthcare.imaging.dicomadapter;
 
 import com.google.cloud.healthcare.IDicomWebClient;
-import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISender;
-import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISenderFactory;
+import com.google.cloud.healthcare.imaging.dicomadapter.cmove.ISender;
+import com.google.cloud.healthcare.imaging.dicomadapter.cmove.ISenderFactory;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
 import java.io.IOException;

@@ -1,6 +1,7 @@
 package com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup;
 
 import com.google.cloud.healthcare.IDicomWebClient;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader.BackupException;
 import java.io.InputStream;
 
 public interface IBackupUploadService {
@@ -9,7 +10,7 @@ public interface IBackupUploadService {
 
   InputStream getBackupStream(String uniqueFileName) throws IBackupUploader.BackupException;
 
-  void startUploading(IDicomWebClient webClient, BackupState backupState) throws IBackupUploader.BackupException;
+  void startUploading(IDicomWebClient webClient, BackupState backupState) throws BackupException;
 
   void removeBackup(String uniqueFileName);
 }

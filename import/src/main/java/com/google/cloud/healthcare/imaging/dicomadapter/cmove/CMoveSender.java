@@ -18,7 +18,6 @@ import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.imaging.dicomadapter.AetDictionary;
 import com.google.cloud.healthcare.imaging.dicomadapter.CMoveService;
 import com.google.cloud.healthcare.imaging.dicomadapter.DicomClient;
-import com.google.cloud.healthcare.imaging.dicomadapter.sender.ISender;
 import com.google.common.io.CountingInputStream;
 import java.io.IOException;
 import java.io.InputStream;

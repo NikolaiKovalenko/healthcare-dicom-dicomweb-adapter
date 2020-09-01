@@ -28,4 +28,8 @@ public class BackupState {
     }
     return false;
   }
+
+  public BackupState clone() {
+    return new BackupState(uniqueFileName, attemptsCountdown);
+  }
 }
