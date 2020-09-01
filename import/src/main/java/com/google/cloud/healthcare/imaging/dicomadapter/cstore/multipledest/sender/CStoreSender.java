@@ -2,11 +2,14 @@ package com.google.cloud.healthcare.imaging.dicomadapter.cstore.multipledest.sen
 
 import com.google.cloud.healthcare.imaging.dicomadapter.AetDictionary.Aet;
 import com.google.cloud.healthcare.imaging.dicomadapter.DicomClient;
-import com.google.common.io.CountingInputStream;
+
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+
 import org.dcm4che3.net.ApplicationEntity;
 
-public class CStoreSender {
+public class CStoreSender implements Closeable {
 
   private final ApplicationEntity applicationEntity;
 
@@ -17,7 +20,7 @@ public class CStoreSender {
   public void cstore(Aet target,
                     String sopInstanceUid,
                     String sopClassUid,
-                    CountingInputStream inputStream)
+                    InputStream inputStream)
       throws IOException, InterruptedException {
     DicomClient.connectAndCstore(
         sopClassUid,
@@ -27,5 +30,10 @@ public class CStoreSender {
         target.getName(),
         target.getHost(),
         target.getPort());
+  }
+
+  @Override
+  public void close() {
+    applicationEntity.getDevice().unbindConnections();
   }
 }
