@@ -29,6 +29,10 @@ public class BackupState {
     return false;
   }
 
+  /**
+   *
+   * @return
+   */
   public BackupState clone() {
     return new BackupState(uniqueFileName, attemptsCountdown);
   }

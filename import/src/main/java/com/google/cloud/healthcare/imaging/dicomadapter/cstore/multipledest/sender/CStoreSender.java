@@ -2,11 +2,9 @@ package com.google.cloud.healthcare.imaging.dicomadapter.cstore.multipledest.sen
 
 import com.google.cloud.healthcare.imaging.dicomadapter.AetDictionary.Aet;
 import com.google.cloud.healthcare.imaging.dicomadapter.DicomClient;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-
 import org.dcm4che3.net.ApplicationEntity;
 
 public class CStoreSender implements Closeable {
