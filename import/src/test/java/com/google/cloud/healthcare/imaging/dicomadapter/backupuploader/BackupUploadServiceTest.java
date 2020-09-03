@@ -25,6 +25,7 @@ import org.dcm4che3.net.Status;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,6 +44,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
+@Ignore
 @RunWith(JUnit4.class)
 public class BackupUploadServiceTest {
 

@@ -20,7 +20,7 @@ public class ParseDestinationTest {
 
   @Test
   public void parseDestination() throws IOException {
-    ImportAdapter.Pair<HashMap<DestinationFilter, AetDictionary.Aet>, HashMap<DestinationFilter, IDicomWebClient>> dsc
+    ImportAdapter.Pair<Map<DestinationFilter, AetDictionary.Aet>, Map<DestinationFilter, IDicomWebClient>> dsc
         = ImportAdapter.configureMultipleDestinationTypesMap(JSON, "", "", null);
     Map<DestinationFilter, AetDictionary.Aet> dicomMap = dsc.getLeft();
     assertThat(dicomMap.size()).isEqualTo(1);
