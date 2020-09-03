@@ -34,6 +34,7 @@ import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.DelayCalcu
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.destination.DestinationHolder;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.destination.IDestinationClientFactory;
+import com.google.cloud.healthcare.imaging.dicomadapter.cstore.destination.SingleDestinationClientFactory;
 import com.google.cloud.healthcare.imaging.dicomadapter.util.DimseRSPAssert;
 import com.google.cloud.healthcare.imaging.dicomadapter.util.PortUtil;
 import com.google.cloud.healthcare.util.TestUtils;
@@ -71,7 +72,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-@Ignore
 @RunWith(JUnit4.class)
 public final class CStoreServiceTest {
 
@@ -91,9 +91,6 @@ public final class CStoreServiceTest {
 
   @Mock
   private BackupFlags backupFlagsMock;
-
-  @Mock
-  IDestinationClientFactory destinationClientFactoryMock;
 
   @Mock
   DestinationHolder destinationHolderMock;
@@ -131,10 +128,7 @@ public final class CStoreServiceTest {
       }
     }
     CStoreService cStoreService =
-        new CStoreService(destinationClientFactoryMock , null, transcodeToSyntax, null);
-
-    when(destinationHolderMock.getSingleDestination()).thenReturn(dicomWebClient);
-    when(destinationClientFactoryMock.create(any(String.class), any(PDVInputStream.class))).thenReturn(destinationHolderMock);
+        new CStoreService(new SingleDestinationClientFactory(destinationMap, dicomWebClient), null, transcodeToSyntax, null);
 
     serviceRegistry.addDicomService(cStoreService);
     Device serverDevice = DeviceUtil.createServerDevice(serverAET, serverPort, serviceRegistry);
