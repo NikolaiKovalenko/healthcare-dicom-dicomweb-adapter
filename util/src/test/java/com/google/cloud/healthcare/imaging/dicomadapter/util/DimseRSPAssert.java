@@ -43,6 +43,10 @@ public class DimseRSPAssert extends DimseRSPHandler {
     assertThat(resultStatus).isEqualTo(wantStatus);
   }
 
+  public void assertResult(int status) {
+    assertThat(resultStatus).isEqualTo(status);
+  }
+
   @Override
   public void onDimseRSP(Association association, Attributes cmd, Attributes data) {
     super.onDimseRSP(association, cmd, data);

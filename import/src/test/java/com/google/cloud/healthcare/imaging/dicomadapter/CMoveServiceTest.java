@@ -275,7 +275,7 @@ public final class CMoveServiceTest {
     rspAssert.assertResult();
   }
 
-  private Association associate(
+  public Association associate(
       String serverHostname, int serverPort, String sopClass, String syntax) throws Exception {
     AAssociateRQ rq = new AAssociateRQ();
     rq.addPresentationContext(new PresentationContext(1, sopClass, syntax));
@@ -287,7 +287,7 @@ public final class CMoveServiceTest {
   }
 
   // Creates a DICOM service and returns the port it is listening on.
-  private int createDicomServer(
+  public int createDicomServer(
       IDicomWebClient dicomWebClient,
       ISenderFactory senderFactory) throws Exception {
     int serverPort = PortUtil.getFreePort();
@@ -304,7 +304,7 @@ public final class CMoveServiceTest {
     return serverPort;
   }
 
-  private class CStoreSenderTest implements ISender {
+  public static class CStoreSenderTest implements ISender {
 
     @Override
     public long cmove(AetDictionary.Aet target, String studyUid, String seriesUid,
