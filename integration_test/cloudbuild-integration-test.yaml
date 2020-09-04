@@ -108,6 +108,41 @@
       --verbose & trap \"exit 0\" SIGTERM; while true; do sleep 1; done"]
   waitFor: ['adapter-build']
 
+# run adapter with multiple destination
+
+- name: 'gcr.io/${_IMAGEPROJECT}/healthcare-api-dicom-dicomweb-adapter-import:${SHORT_SHA}'
+  id: adapter-with-multiple-destinations
+  entrypoint: 'bash'
+  args: [ '-c',
+      "java -Dorg.dcm4che3.imageio.codec.ImageReaderFactory=com/google/cloud/healthcare/imaging/dicomadapter/transcoder/ImageReaderFactory.properties \
+            -Dorg.dcm4che3.imageio.codec.ImageWriterFactory=com/google/cloud/healthcare/imaging/dicomadapter/transcoder/ImageWriterFactory.properties \
+            -cp /app/resources:/app/classes:/app/libs/* com.google.cloud.healthcare.imaging.dicomadapter.ImportAdapter \
+      --dimse_aet=IMPORTADAPTER \
+      --dimse_port=${_ADAPTER_PORT_WITH_MULTIPLE_DESTINATIONS} \
+      --destination_config_inline=\"[{\\\"filter\\\":\\\"Modality=MG\\\",\\\"dicomweb_destination\\\":\\\"https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}-destination-2/dicomWeb\\\"}, {\\\"filter\\\":\\\"Modality=STORESCP\\\"\\\"name\\\":\\\"STORESCP\\\",\\\"host\\\":${_STORE_SCP_RUN_STEP},\\\"port\\\":${_STORE_SCP_PORT}}]\" \
+      --persistent_file_storage_location=tmp/backupfile \
+      --persistent_file_upload_retry_amount=5 \
+      --verbose & trap \"exit 0\" SIGTERM; while true; do sleep 1; done"]
+  waitFor: ['adapter-build']
+
+  # run adapter with single destination
+
+- name: 'gcr.io/${_IMAGEPROJECT}/healthcare-api-dicom-dicomweb-adapter-import:${SHORT_SHA}'
+  id: adapter-with-single-destination
+  entrypoint: 'bash'
+  args: [ '-c',
+      "java -Dorg.dcm4che3.imageio.codec.ImageReaderFactory=com/google/cloud/healthcare/imaging/dicomadapter/transcoder/ImageReaderFactory.properties \
+            -Dorg.dcm4che3.imageio.codec.ImageWriterFactory=com/google/cloud/healthcare/imaging/dicomadapter/transcoder/ImageWriterFactory.properties \
+            -cp /app/resources:/app/classes:/app/libs/* com.google.cloud.healthcare.imaging.dicomadapter.ImportAdapter \
+      --dimse_aet=IMPORTADAPTER \
+      --dimse_port=${_ADAPTER_PORT_WITH_SINGLE_DESTINATION} \
+      --destination_config_inline=\"[{\\\"filter\\\":\\\"Modality=MG\\\",\\\"dicomweb_destination\\\":\\\"https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}-destination-2/dicomWeb\\\"}, {\\\"filter\\\":\\\"Modality=STORESCP\\\"\\\"name\\\":\\\"STORESCP\\\",\\\"host\\\":${_STORE_SCP_RUN_STEP},\\\"port\\\":${_STORE_SCP_PORT}}]\" \
+      --send_to_all_matching_destinations=true \
+      --persistent_file_storage_location=tmp/backupfile \
+      --persistent_file_upload_retry_amount=5 \
+      --verbose & trap \"exit 0\" SIGTERM; while true; do sleep 1; done"]
+  waitFor: ['adapter-build']
+
 # create dataset if not exists, re-create store (delete if exists, then create)
 - name: ${_CLOUD_SDK_IMAGE}
   id: setup-dataset-and-dicom-store
@@ -227,7 +262,7 @@
   - '-ntp'
   - 'exec:java'
   - '-Dexec.mainClass=org.dcm4che3.tool.storescu.StoreSCU'
-  - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_LOCAL_BACKUP}:${_ADAPTER_PORT_WITH_LOCAL_BACKUP} ../../../integration_test/data/example.dcm'
+  - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_LOCAL_BACKUP}:${_ADAPTER_PORT_WITH_LOCAL_BACKUP} ../../../integration_test/data/example2.dcm'
   dir: "dcm4che/dcm4che-tool/dcm4che-tool-storescu"
   waitFor:
   - wait-for-adapter-with-local-backup
@@ -242,10 +277,40 @@
   - '-ntp'
   - 'exec:java'
   - '-Dexec.mainClass=org.dcm4che3.tool.storescu.StoreSCU'
-  - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_GCS_BACKUP}:${_ADAPTER_PORT_WITH_GCS_BACKUP} ../../../integration_test/data/example.dcm'
+  - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_GCS_BACKUP}:${_ADAPTER_PORT_WITH_GCS_BACKUP} ../../../integration_test/data/example3.dcm'
   dir: "dcm4che/dcm4che-tool/dcm4che-tool-storescu"
   waitFor:
   - wait-for-adapter-with-gcs-backup
+
+- name: ${_MAVEN_IMAGE}
+  id: run-store-scu-with-multiple-destinations
+  volumes:
+    - name: 'vol1'
+      path: '/root/.m2'
+  args:
+    - mvn
+    - '-ntp'
+    - 'exec:java'
+    - '-Dexec.mainClass=org.dcm4che3.tool.storescu.StoreSCU'
+    - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_MULTIPLE_DESTINATIONS}:${_ADAPTER_PORT_WITH_MULTIPLE_DESTINATIONS} ../../../integration_test/data/example4.dcm'
+  dir: "dcm4che/dcm4che-tool/dcm4che-tool-storescu"
+  waitFor:
+    - wait-for-adapter-with-multiple-destinations
+
+- name: ${_MAVEN_IMAGE}
+  id: run-store-scu-with-single-destination
+  volumes:
+    - name: 'vol1'
+      path: '/root/.m2'
+  args:
+    - mvn
+    - '-ntp'
+    - 'exec:java'
+    - '-Dexec.mainClass=org.dcm4che3.tool.storescu.StoreSCU'
+    - '-Dexec.args=-c IMPORTADAPTER@${_ADAPTER_RUN_STEP_WITH_SINGLE_DESTINATION}:${_ADAPTER_PORT_WITH_SINGLE_DESTINATION} ../../../integration_test/data/example5.dcm'
+  dir: "dcm4che/dcm4che-tool/dcm4che-tool-storescu"
+  waitFor:
+    - wait-for-adapter-with-single-destination
 
 - name: ${_MAVEN_IMAGE}
   id: run-store-scu-destination-2
@@ -343,6 +408,8 @@
   - run-store-scu-destination-2
   - run-store-scu-with-local-backup
   - run-store-scu-with-gcs-backup
+  - run-store-scu-with-multiple-destinations
+  - run-store-scu-with-single-destination
   - run-find-scu-instance
   - run-find-scu-series
   - run-find-scu-study
@@ -361,6 +428,8 @@
   - run-store-scu-destination-2
   - run-store-scu-with-local-backup
   - run-store-scu-with-gcs-backup
+  - run-store-scu-with-multiple-destinations
+  - run-store-scu-with-single-destination
   - run-find-scu-instance
   - run-find-scu-series
   - run-find-scu-study
@@ -386,6 +455,26 @@
   - integration_test/downloaded.dcm
   waitFor:
   - run-store-scu
+
+- name: ${_CLOUD_SDK_IMAGE}
+  id: check-store-curl-with-local-backup
+  args:
+    - bash
+    - integration_test/scripts/curl-dcm.sh
+    - "https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}/dicomWeb/studies/${_REPLACED_UID}/series/${_REPLACED_UID}/instances/${_REPLACED_UID}"
+    - integration_test/downloaded2.dcm
+  waitFor:
+    - run-store-scu-with-local-backup
+
+- name: ${_CLOUD_SDK_IMAGE}
+  id: check-store-curl-with-gcs-backup
+  args:
+    - bash
+    - integration_test/scripts/curl-dcm.sh
+    - "https://healthcare.googleapis.com/${_VERSION}/projects/${_PROJECT}/locations/${_LOCATION}/datasets/${_DATASET}/dicomStores/${_STORE_NAME}/dicomWeb/studies/${_REPLACED_UID}/series/${_REPLACED_UID}/instances/${_REPLACED_UID}"
+    - integration_test/downloaded3.dcm
+  waitFor:
+    - run-store-scu-with-gcs-backup
 
 # example-redacted has replaced UIDs and removed ContentTime,ContentDate tags
 - name: 'busybox:latest'
@@ -415,6 +504,24 @@
   - 'integration_test/data/example-redacted-mg-jp2k.dcm'
   waitFor:
   - check-store-curl-destination-2
+
+- name: 'busybox:latest'
+  id: check-store-diff-with-local-backup
+  args:
+    - diff
+    - 'integration_test/downloaded2.dcm'
+    - 'integration_test/data/example-redacted-jp2k.dcm'
+  waitFor:
+    - check-store-curl-with-local-backup
+
+- name: 'busybox:latest'
+  id: check-store-diff-with-gcs-backup
+  args:
+    - diff
+    - 'integration_test/downloaded3.dcm'
+    - 'integration_test/data/example-redacted-jp2k.dcm'
+  waitFor:
+    - check-store-curl-with-gcs-backup
 
 - name: 'busybox:latest'
   id: check-find-diff-instance
@@ -482,6 +589,8 @@
   waitFor:
   - check-store-curl
   - check-store-curl-destination-2
+  - check-store-curl-with-local-backup
+  - check-store-curl-with-gcs-backup
   - run-find-scu-instance
   - run-find-scu-series
   - run-find-scu-study
@@ -525,6 +634,8 @@ substitutions:
   _COMMITMENT_SCU_PORT: '4000'
   _ADAPTER_PORT_WITH_LOCAL_BACKUP: '2585'
   _ADAPTER_PORT_WITH_GCS_BACKUP: '2586'
+  _ADAPTER_PORT_WITH_MULTIPLE_DESTINATIONS: '2595'
+  _ADAPTER_PORT_WITH_SINGLE_DESTINATION: '2596'
   _KMS_LOCATION: global
   _KMS_KEYRING: default
   _KMS_KEY: github-robot-access-token
@@ -535,8 +646,10 @@ substitutions:
   _ADAPTER_RUN_STEP_HTTP2: 'step_6'
   _ADAPTER_RUN_STEP_WITH_LOCAL_BACKUP: 'step_7'
   _ADAPTER_RUN_STEP_WITH_GCS_BACKUP: 'step_8'
+  _ADAPTER_RUN_STEP_WITH_MULTIPLE_DESTINATIONS: 'step_9'
+  _ADAPTER_RUN_STEP_WITH_SINGLE_DESTINATION: 'step_10'
   _STORE_SCP_RUN_STEP: 'step_3'
-  _COMMITMENT_SCU_STEP: 'step_24'
+  _COMMITMENT_SCU_STEP: 'step_32'
 # Deid redactor replaces Instance/Series/Study UIDs with pseudo-random value seeded from original.
 # This value corresponds to '111'. UID replacement behavior is not configurable in redactor.
   _REPLACED_UID: '2.25.140302709094137852884202099990798014056'
