@@ -18,6 +18,7 @@ public class DestinationHolder {
     //default values
     this.singleDestination = defaultDestination;
     this.healthcareDestinations = ImmutableList.of(defaultDestination);
+    this.dicomDestinations = ImmutableList.of();
   }
 
   public CountingInputStream getCountingInputStream() {

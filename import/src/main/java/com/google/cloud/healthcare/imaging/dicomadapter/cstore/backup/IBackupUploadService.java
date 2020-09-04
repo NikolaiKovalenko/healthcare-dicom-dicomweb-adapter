@@ -9,7 +9,7 @@ import java.io.InputStream;
 
 public interface IBackupUploadService {
 
-  BackupState createBackup(InputStream inputStream, String uniqueFileName) throws IBackupUploader.BackupException;
+  void createBackup(InputStream inputStream, String uniqueFileName) throws IBackupUploader.BackupException;
 
   void startUploading(IDicomWebClient webClient, BackupState backupState) throws BackupException;
   void startUploading(CStoreSender cStoreSender, AetDictionary.Aet target, String sopInstanceUid, String sopClassUidBackupState,

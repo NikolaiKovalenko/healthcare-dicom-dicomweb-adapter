@@ -29,7 +29,6 @@ import com.google.cloud.healthcare.deid.redactor.DicomRedactor;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig.TagFilterProfile;
-import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupFlags;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.DelayCalculator;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.GcpBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupUploadService;
@@ -144,7 +143,10 @@ public class ImportAdapter {
     String cstoreSubAet = flags.dimseCmoveAET.equals("") ? flags.dimseAET : flags.dimseCmoveAET;
 
     CStoreSenderFactory cStoreSenderFactory = new CStoreSenderFactory(cstoreSubAet);
-    MultipleDestinationSendService multipleDestinationSendService = new MultipleDestinationSendService(cStoreSenderFactory, backupUploadService);
+    MultipleDestinationSendService multipleDestinationSendService = new MultipleDestinationSendService(
+        cStoreSenderFactory,
+        backupUploadService,
+        flags.persistentFileUploadRetryAmount);
 
     CStoreService cStoreService =
         new CStoreService(destinationClientFactory, redactor, flags.transcodeToSyntax, multipleDestinationSendService);
@@ -172,11 +174,6 @@ public class ImportAdapter {
 
   private static BackupUploadService configureBackupUploadService(Flags flags) throws IOException {
     String uploadPath = flags.persistentFileStorageLocation;
-    BackupFlags backupFlags = new BackupFlags(
-        flags.persistentFileUploadRetryAmount,
-        flags.minUploadDelay,
-        flags.maxWaitingTimeBetweenUploads,
-        flags.httpErrorCodesToRetry);
 
     if (!uploadPath.isBlank()) {
       final IBackupUploader backupUploader;
@@ -185,7 +182,13 @@ public class ImportAdapter {
       } else {
         backupUploader = new LocalBackupUploader(uploadPath);
       }
-      return new BackupUploadService(backupUploader, backupFlags, new DelayCalculator());
+      return new BackupUploadService(
+          backupUploader,
+          flags.persistentFileUploadRetryAmount,
+          flags.httpErrorCodesToRetry,
+          new DelayCalculator(
+              flags.minUploadDelay,
+              flags.maxWaitingTimeBetweenUploads));
       }
     return null;
   }

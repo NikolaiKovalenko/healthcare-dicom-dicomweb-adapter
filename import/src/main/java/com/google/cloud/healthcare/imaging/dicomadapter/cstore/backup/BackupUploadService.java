@@ -9,6 +9,7 @@ import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringSer
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.IBackupUploader.BackupException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -20,8 +21,8 @@ public class BackupUploadService implements IBackupUploadService {
 
   private final DelayCalculator delayCalculator;
   private final IBackupUploader backupUploader;
+  private final List<Integer> httpErrorCodesToRetry;
   private final int attemptsAmount;
-  private final BackupFlags backupFlags;
 
   private Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -30,18 +31,17 @@ public class BackupUploadService implements IBackupUploadService {
    * @param backupUploader DAO with simple write/read/remove operations.
    * @param delayCalculator util class for reSend tasks schedule delay calculation.
    */
-  public BackupUploadService(IBackupUploader backupUploader, BackupFlags backupFlags, DelayCalculator delayCalculator) {
+  public BackupUploadService(IBackupUploader backupUploader, Integer attemptsAmount, List<Integer> httpErrorCodesToRetry, DelayCalculator delayCalculator) {
     this.backupUploader = backupUploader;
     this.delayCalculator = delayCalculator;
-    this.attemptsAmount = backupFlags.getAttemptsAmount();
-    this.backupFlags = backupFlags;
+    this.httpErrorCodesToRetry = httpErrorCodesToRetry;
+    this.attemptsAmount = attemptsAmount;
   }
 
   @Override
-  public BackupState createBackup(InputStream inputStream, String uniqueFileName) throws BackupException {
+  public void createBackup(InputStream inputStream, String uniqueFileName) throws BackupException {
     backupUploader.doWriteBackup(inputStream, uniqueFileName);
     log.debug("sopInstanceUID={}, backup saved.", uniqueFileName);
-    return new BackupState(uniqueFileName, attemptsAmount);
   }
 
   @Override
@@ -81,7 +81,7 @@ public class BackupUploadService implements IBackupUploadService {
   }
 
   public boolean filterHttpCode(Integer actualHttpStatus) {
-    return actualHttpStatus >= 500 || backupFlags.getHttpErrorCodesToRetry().contains(actualHttpStatus);
+    return actualHttpStatus >= 500 || httpErrorCodesToRetry.contains(actualHttpStatus);
   }
 
   public abstract class UploadAsyncJob implements Runnable {
@@ -160,7 +160,7 @@ public class BackupUploadService implements IBackupUploadService {
                       sopClassUidBackupState),
                   delayCalculator.getExponentialDelayMillis(
                       backupState.getAttemptsCountdown(),
-                      backupFlags));
+                      attemptsAmount));
 
             } catch (BackupException ex) {
               throw new CompletionException(ex);
@@ -201,7 +201,7 @@ public class BackupUploadService implements IBackupUploadService {
               scheduleUploadWithDelay(
                   backupState,
                   new HealthcareDestinationUploadAsyncJob(webClient, backupState),
-                  delayCalculator.getExponentialDelayMillis(backupState.getAttemptsCountdown(), backupFlags));
+                  delayCalculator.getExponentialDelayMillis(backupState.getAttemptsCountdown(), attemptsAmount));
 
             } catch (BackupException ex) {
               throw new CompletionException(ex);
@@ -222,7 +222,7 @@ public class BackupUploadService implements IBackupUploadService {
     if (backupState.decrement()) {
       log.info("Trying to send data, sopInstanceUID={}, attempt № {}. ",
           uniqueFileName,
-          attemptsAmount - backupState.getAttemptsCountdown());
+          1 + attemptsAmount - backupState.getAttemptsCountdown());
 
       CompletableFuture completableFuture = CompletableFuture.runAsync(
           uploadJob,

@@ -15,14 +15,18 @@ public class BackupStateTest {
     BackupState backupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT);
 
     assertThat(backupState.getUniqueFileName()).isEqualTo(UNIQUE_FILE_NAME);
-    assertThat(backupState.getAttemptsCountdown()).isEqualTo(ATTEMPTS_AMOUNT);
+    assertThat(backupState.getAttemptsCountdown()).isEqualTo(2);
 
     boolean decrementSuccess = backupState.decrement();
     assertThat(decrementSuccess).isTrue();
-    assertThat(backupState.getAttemptsCountdown()).isEqualTo(ATTEMPTS_AMOUNT - 1);
+    assertThat(backupState.getAttemptsCountdown()).isEqualTo(1);
+
+    decrementSuccess = backupState.decrement();
+    assertThat(decrementSuccess).isTrue();
+    assertThat(backupState.getAttemptsCountdown()).isEqualTo(0);
 
     decrementSuccess = backupState.decrement();
     assertThat(decrementSuccess).isFalse();
-    assertThat(backupState.getAttemptsCountdown()).isEqualTo(ATTEMPTS_AMOUNT - 1);
+    assertThat(backupState.getAttemptsCountdown()).isEqualTo(0);
   }
 }

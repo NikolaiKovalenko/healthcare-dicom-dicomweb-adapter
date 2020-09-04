@@ -19,10 +19,12 @@ public class MultipleDestinationSendService implements IMultipleDestinationSendS
 
   private CStoreSenderFactory cStoreSenderFactory;
   private BackupUploadService backupUploadService;
+  private int attemptsAmount;
 
-  public MultipleDestinationSendService(CStoreSenderFactory cStoreSenderFactory, BackupUploadService backupUploadService) {
+  public MultipleDestinationSendService(CStoreSenderFactory cStoreSenderFactory, BackupUploadService backupUploadService, int attemptsAmount) {
     this.cStoreSenderFactory = cStoreSenderFactory;
     this.backupUploadService = backupUploadService;
+    this.attemptsAmount = attemptsAmount;
   }
 
   @Override
@@ -30,7 +32,7 @@ public class MultipleDestinationSendService implements IMultipleDestinationSendS
                     ImmutableList<AetDictionary.Aet> dicomDestinations,
                     InputStream inputStream,
                     String sopClassUID,
-                    String sopInstanceUID) throws BackupException {
+                    String backupFileName) throws BackupException {
     CStoreSender cStoreSender = cStoreSenderFactory.create();
 
     if (backupUploadService == null) {
@@ -38,14 +40,14 @@ public class MultipleDestinationSendService implements IMultipleDestinationSendS
     }
 
     try {
-      BackupState backupState = backupUploadService.createBackup(inputStream, sopInstanceUID);
+      backupUploadService.createBackup(inputStream, backupFileName);
 
       for (IDicomWebClient healthcareDest: healthcareDestinations) {
-        backupUploadService.startUploading(healthcareDest, backupState.clone());
+        backupUploadService.startUploading(healthcareDest, new BackupState(backupFileName, attemptsAmount));
       }
 
       for (AetDictionary.Aet dicomDest: dicomDestinations) {
-        backupUploadService.startUploading(cStoreSender, dicomDest, sopInstanceUID, sopClassUID, backupState.clone());
+        backupUploadService.startUploading(cStoreSender, dicomDest, backupFileName, sopClassUID, new BackupState(backupFileName, attemptsAmount));
       }
     } catch (BackupException be) {
       log.error("MultipleDestinationSendService processing failed.", be);

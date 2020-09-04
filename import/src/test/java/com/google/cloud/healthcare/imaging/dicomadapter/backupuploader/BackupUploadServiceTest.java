@@ -16,7 +16,6 @@ import static org.mockito.Mockito.when;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.cloud.healthcare.IDicomWebClient;
 import com.google.cloud.healthcare.IDicomWebClient.DicomWebException;
-import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupFlags;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupState;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.BackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.cstore.backup.DelayCalculator;
@@ -25,7 +24,6 @@ import org.dcm4che3.net.Status;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,17 +40,19 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-@Ignore
 @RunWith(JUnit4.class)
 public class BackupUploadServiceTest {
 
   private final byte [] BACKUP_BYTES = {1, 2, 3, 4};
   private final String UNIQUE_FILE_NAME = "testUniqueFileName";
+
+  // Test emulation of the situation, when first send already done and flag persistent_file_upload_retry_amount=0
+  private final int ATTEMPTS_AMOUNT_MINUS_ONE = -1;
   private final int ATTEMPTS_AMOUNT_ZERO = 0;
   private final int ATTEMPTS_AMOUNT_ONE = 1;
-  private final int ATTEMPTS_AMOUNT_TWO = 2;
   private final String EXPECTED_NO_RESEND_ATTEMPT_LEFT_LOG_MESSAGE = "sopInstanceUID=" + UNIQUE_FILE_NAME + ". No resend attempt left.";
 
   private InputStream backupInputStream;
@@ -70,20 +70,18 @@ public class BackupUploadServiceTest {
   private DelayCalculator delayCalculatorMock;
 
   @Mock
-  private BackupFlags backupFlagsMock;
-
-  @Mock
   private IDicomWebClient webClientMock;
 
   @Spy
-  private BackupState spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_TWO);
+  private BackupState spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_ONE);
 
   private BackupUploadService backupUploadService;
 
   @Before
   public void before() {
-    when(backupFlagsMock.getAttemptsAmount()).thenReturn(ATTEMPTS_AMOUNT_ONE);
-    backupUploadService = new BackupUploadService(backupUploaderMock, backupFlagsMock, delayCalculatorMock);
+    backupUploadService =
+        new BackupUploadService(
+            backupUploaderMock, ATTEMPTS_AMOUNT_ZERO, Collections.EMPTY_LIST, delayCalculatorMock);
     backupInputStream = new ByteArrayInputStream(BACKUP_BYTES);
   }
 
@@ -94,11 +92,9 @@ public class BackupUploadServiceTest {
 
   @Test
   public void createBackup_success() throws BackupException {
-    BackupState actualBackupState = backupUploadService.createBackup(backupInputStream, UNIQUE_FILE_NAME);
+    backupUploadService.createBackup(backupInputStream, UNIQUE_FILE_NAME);
 
     verify(backupUploaderMock).doWriteBackup(eq(backupInputStream), eq(UNIQUE_FILE_NAME));
-    assertThat(actualBackupState.getAttemptsCountdown()).isEqualTo(ATTEMPTS_AMOUNT_ONE);
-    assertThat(actualBackupState.getUniqueFileName()).isEqualTo(UNIQUE_FILE_NAME);
   }
 
   @Test
@@ -141,8 +137,6 @@ public class BackupUploadServiceTest {
     inOrder.verify(webClientMock).stowRs(argumentCaptor.capture());
     byte [] actualBytes = argumentCaptor.getValue().readNBytes(5);
     assertThat(Arrays.equals(actualBytes, BACKUP_BYTES)).isTrue();
-
-    inOrder.verify(backupUploaderMock).doRemoveBackup(eq(UNIQUE_FILE_NAME));
   }
 
   @Test
@@ -160,7 +154,7 @@ public class BackupUploadServiceTest {
     byte [] actualBytes = argumentCaptor.getValue().readNBytes(5);
     assertThat(Arrays.equals(actualBytes, BACKUP_BYTES)).isTrue();
 
-    verify(backupUploaderMock).doRemoveBackup(eq(UNIQUE_FILE_NAME));
+    verify(backupUploaderMock, never()).doRemoveBackup(eq(UNIQUE_FILE_NAME));
   }
 
   @Test
@@ -176,7 +170,7 @@ public class BackupUploadServiceTest {
 
   @Test
   public void startUploading_noMoreTry_BackupException() throws BackupException {
-    spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_ZERO);
+    spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_MINUS_ONE);
 
     when(backupUploaderMock.doReadBackup(eq(UNIQUE_FILE_NAME))).thenReturn(backupInputStream);
 
@@ -184,11 +178,13 @@ public class BackupUploadServiceTest {
     exceptionRule.expectMessage(EXPECTED_NO_RESEND_ATTEMPT_LEFT_LOG_MESSAGE);
 
     backupUploadService.startUploading(webClientMock, spyBackupState);
+
+    verify(backupUploaderMock, never()).doRemoveBackup(eq(UNIQUE_FILE_NAME));
   }
 
   @Test
   public void startUploading_lastAttempt_noNewSchedule_BackupException() throws IOException, DicomWebException {
-    spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_ONE);
+    spyBackupState = new BackupState(UNIQUE_FILE_NAME, ATTEMPTS_AMOUNT_ZERO);
 
     doThrow(new DicomWebException("Reason2", HttpStatus.INTERNAL_SERVER_ERROR_500, Status.ProcessingFailure))
         .doNothing().when(webClientMock).stowRs(any(InputStream.class));
@@ -232,8 +228,9 @@ public class BackupUploadServiceTest {
 
   @Test
   public void startUploading_retryOn_DicomWebException408Code_Success() throws DicomWebException, IOException {
-    when(backupFlagsMock.getHttpErrorCodesToRetry()).thenReturn(List.of(408));
-    when(backupFlagsMock.getAttemptsAmount()).thenReturn(ATTEMPTS_AMOUNT_TWO);
+    backupUploadService =
+        new BackupUploadService(
+            backupUploaderMock, ATTEMPTS_AMOUNT_ONE, List.of(408), delayCalculatorMock);
 
     doThrow(new DicomWebException(" Request Timeout 408", HttpStatus.REQUEST_TIMEOUT_408, HttpStatusCodes.STATUS_CODE_BAD_REQUEST))
         .doNothing()
@@ -244,7 +241,7 @@ public class BackupUploadServiceTest {
 
     verify(backupUploaderMock, times(2)).doReadBackup(eq(UNIQUE_FILE_NAME));
     verify(webClientMock, times(2)).stowRs(any(InputStream.class));
-    verify(backupUploaderMock).doRemoveBackup(eq(UNIQUE_FILE_NAME));
+    verify(backupUploaderMock, never()).doRemoveBackup(eq(UNIQUE_FILE_NAME));
   }
 
   private void catchAndAssertBackupExceptionOnStartUploading(String expectedMessage, Integer expectedDicomStatus, int recursiveCallTimes) {

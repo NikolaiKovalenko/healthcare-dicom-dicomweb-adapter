@@ -15,6 +15,7 @@ public class SingleDestinationClientFactory extends DestinationClientFactory {
     for (DestinationFilter filter: destinationMap.keySet()) {
       if (filter.matches(callingAet, attrs)) {
         destinationHolder.setSingleDestination(destinationMap.get(filter));
+        return;
       }
     }
   }
