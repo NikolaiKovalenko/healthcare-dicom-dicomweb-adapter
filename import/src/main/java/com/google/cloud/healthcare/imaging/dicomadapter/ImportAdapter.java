@@ -163,7 +163,7 @@ public class ImportAdapter {
            .setDestinationJsonInline(flags.destinationConfigInline)
            .setDestinationsJsonPath(flags.destinationConfigPath)
            .setCredentials(credentials)
-           .createSingleMap(),
+           .createHealthcareMap(),
           defaultCstoreDicomWebClient);
     }
     String cstoreSubAet = flags.dimseCmoveAET.equals("") ? flags.dimseAET : flags.dimseCmoveAET;

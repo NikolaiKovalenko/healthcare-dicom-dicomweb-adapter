@@ -304,7 +304,7 @@ public final class CMoveServiceTest {
     return serverPort;
   }
 
-  private class CStoreSenderTest implements ISender {
+  public static class CStoreSenderTest implements ISender {
 
     @Override
     public long cmove(AetDictionary.Aet target, String studyUid, String seriesUid,
