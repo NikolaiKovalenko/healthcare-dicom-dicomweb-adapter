@@ -20,6 +20,7 @@ Table of Contents
          * [Building and publishing Docker Images](#building-and-publishing-docker-images)
       * [Backup and retry upload](#backup-and-retry-upload)
       * [Wiki](#wiki)
+      * [Troubleshooting](#troubleshooting)
 
 ## Import Adapter
 
@@ -73,10 +74,6 @@ kubectl create configmap aet-dictionary --from-file=AETs.json
 The AET dictionary JSON can also be specified directly via the "--aet_dictionary_inline" parameter.
 
 For the list of command line flags, see [here](import/src/main/java/com/google/cloud/healthcare/imaging/dicomadapter/Flags.java)
-
-## Routing to multiple DICOM stores
-
-The Import Adapter supports routing to multiple DICOM stores based on tags in the incoming instance and the client application entity title. Please see [this page](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki/Routing-to-multiple-DICOM-stores) for more information.
 
 ## Export Adapter
 
@@ -287,54 +284,15 @@ TAG=gcr.io/${PROJECT}/dicom-export-adapter
 gradle dockerBuildImage -Pdocker_tag=${TAG}
 docker push ${TAG}
 ```
-## Backup and retry upload
-In C-STORE to STOW-RS mode, the Import Adapter can use additional flags to improve the reliability of file loading in Healthcare. Before uploading a file to Healthcare, the file is saved to temporary storage from which the Import Adapter tries to upload the file the specified number of times. The file can be saved locally or loaded into the GCS bucket.
-After a successful upload, the temporary file will be deleted. Also, the user can independently configure TTL to automatically delete files from GCS.
-
-The following arguments are used to configure the mode :
-* --persistent_file_storage_location : temporary location for storing files before send
-* --persistent_file_upload_retry_amount : upload retry amount
-* --min_upload_delay : minimum delay before upload backup file (ms) (default 100ms)
-* --max_waiting_time_btw_uploads : maximum waiting time between uploads (ms) (default 5000ms)
-
-If the flag --persistent_file_storage_location is not used then loading occurs without writing a temporary file
-
-If you are using Kubernetes, then in the file `dicom_adapter.yaml` change the arguments in the file as follows :
-
-```yaml
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: dicom-adapter
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: dicom-adapter
-    spec:
-      containers:
-        - name: dicom-import-adapter
-          image: gcr.io/cloud-healthcare-containers/healthcare-api-dicom-dicomweb-adapter-import:0.2.1
-          ports:
-            - containerPort: 2575
-              protocol: TCP
-              name: "port"
-          args:
-            - "--dimse_aet=IMPORTADAPTER"
-            - "--dimse_port=2575"
-            - "--dicomweb_address=https://healthcare.googleapis.com/v1/projects/myproject/locations/us-central1/datasets/mydataset/dicomStores/mydicomstore/dicomWeb"
-            - "--persistent_file_storage_location=/tmp/backupfile"
-            - "--persistent_file_upload_retry_amount=5"
-            - "--min_upload_delay=100"
-            - "--max_waiting_time_btw_uploads=5000"
-```
-
-if you are using import adapter locally : 
-```shell
-gradle run -Dexec.args="--dimse_aet=IMPORTADAPTER --dimse_port=4008 --dicomweb_address=http://localhost:80 --persistent_file_storage_location=/tmp/backupfile --persistent_file_upload_retry_amount=5 --min_upload_delay=100 --max_waiting_time_btw_uploads=5000"
-```
 
 ## Wiki
 
-For addition documentation please check out the [Wiki](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki).
+For addition documentation please see the [Wiki](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki).
+The wiki includes information on advanced features such as:
+* [C-Store Retries and File Backup](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki/C-STORE-Backup-and-Retries)
+* [Routing to Multiple DICOM Stores](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki/Routing-to-multiple-DICOM-stores)
+* [C-Store In-Transit Transcoding](https://github.com/GoogleCloudPlatform/healthcare-dicom-dicomweb-adapter/wiki/In-transit-transcoding)
+
+## Troubleshooting
+
+Both the Import and Export adapter output server logs that can be used to diagnose issues. When running on GKE, these server logs show up in Cloud Logging. You can view these logs by navigating to https://console.cloud.google.com/kubernetes/workload, clicking on dicom-adapter deployment and following the link titled "Container logs". Alternatively you can view the logs via `kubectl logs <pod-name>` where `<pod-name>` can be found by running `kubectl get pods`.

@@ -24,7 +24,9 @@ import com.google.cloud.healthcare.deid.redactor.DicomRedactor;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig;
 import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomConfig.TagFilterProfile;
+import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupFlags;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
+import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.GcpBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader;
@@ -50,6 +52,7 @@ public class ImportAdapter {
 
   private static final Logger log = LoggerFactory.getLogger(ImportAdapter.class);
   private static final String STUDIES = "studies";
+  private static final String GCP_PATH_PREFIX = "gs://";
 
   public static void main(String[] args) throws IOException, GeneralSecurityException {
     Flags flags = new Flags();
@@ -116,12 +119,7 @@ public class ImportAdapter {
     Map<DestinationFilter, IDicomWebClient> destinationMap = configureDestinationMap(
         flags.destinationConfigInline, flags.destinationConfigPath, credentials);
 
-    // backup upload service
-    IBackupUploader backupUploader = new LocalBackupUploader(uploadPath);
-    IBackupUploadService backupUploadService = new BackupUploadService(backupUploader,
-        new DelayCalculator(uploadRetryAmount, minUploadDelay, maxWaitingTimeBtwUploads));
-    //todo: parse --persistent_file_storage_location -> create backupUploadService instance - if present.
-    // else - null.
+    BackupUploadService backupUploadService = configureBackupUploadService(flags);
 
     DicomRedactor redactor = configureRedactor(flags);
     CStoreService cStoreService =
@@ -147,6 +145,26 @@ public class ImportAdapter {
     // Start DICOM server
     Device device = DeviceUtil.createServerDevice(flags.dimseAET, flags.dimsePort, serviceRegistry);
     device.bindConnections();
+  }
+
+  private static BackupUploadService configureBackupUploadService(Flags flags) throws IOException {
+    String uploadPath = flags.persistentFileStorageLocation;
+    BackupFlags backupFlags = new BackupFlags(
+        flags.persistentFileUploadRetryAmount,
+        flags.minUploadDelay,
+        flags.maxWaitingTimeBetweenUploads,
+        flags.httpErrorCodesToRetry);
+
+    if (!uploadPath.isBlank()) {
+      final IBackupUploader backupUploader;
+      if (uploadPath.startsWith(GCP_PATH_PREFIX)) {
+        backupUploader = new GcpBackupUploader(uploadPath, flags.gcsBackupProjectId, flags.oauthScopes);
+      } else {
+        backupUploader = new LocalBackupUploader(uploadPath);
+      }
+      return new BackupUploadService(backupUploader, backupFlags, new DelayCalculator());
+      }
+    return null;
   }
 
   private static DicomRedactor configureRedactor(Flags flags) throws IOException{

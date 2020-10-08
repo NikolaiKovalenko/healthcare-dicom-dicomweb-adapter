@@ -17,6 +17,9 @@ package com.google.cloud.healthcare.imaging.dicomadapter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Parameters(separators = "= ")
 public class Flags {
 
@@ -63,9 +66,9 @@ public class Flags {
 
   @Parameter(
       names = {"--stow_http2"},
-      description = "Whether to use HTTP 2.0 for StowRS (i.e. StoreInstances) requests. False by default."
+      description = "Whether to use HTTP 2.0 for StowRS (i.e. StoreInstances) requests. True by default."
   )
-  Boolean useHttp2ForStow = false;
+  Boolean useHttp2ForStow = true;
 
   @Parameter(
       names = {"--oauth_scopes"},
@@ -149,7 +152,6 @@ public class Flags {
   )
   Boolean fuzzyMatching = false;
 
-  // retrying failed uploads
   @Parameter(
           names = {"--persistent_file_storage_location"},
           description = "temporary location for storing files before send"
@@ -157,10 +159,16 @@ public class Flags {
   String persistentFileStorageLocation = "";
 
   @Parameter(
+          names = {"--gcs_backup_project_id"},
+          description = "Google Cloud project ID"
+  )
+  String gcsBackupProjectId = "";
+
+  @Parameter(
           names = {"--persistent_file_upload_retry_amount"},
           description = "upload retry amount"
   )
-  Integer persistentFileUploadRetryAmount = 1;
+  Integer persistentFileUploadRetryAmount = 0;
 
   @Parameter(
           names = {"--min_upload_delay"},
@@ -169,10 +177,16 @@ public class Flags {
   Integer minUploadDelay = 100;
 
   @Parameter(
-          names = {"--max_waiting_time_btw_uploads"},
+          names = {"--max_waiting_time_between_uploads"},
           description = "maximum waiting time between uploads (ms)"
   )
-  Integer maxWaitingTimeBtwUploads = 5000;
+  Integer maxWaitingTimeBetweenUploads = 5000;
+
+  @Parameter(
+      names = {"--http_error_codes_to_retry"},
+      description = "http codes list to retry that less than 500."
+  )
+  List<Integer> httpErrorCodesToRetry = new ArrayList<>();
 
   public Flags() {
   }
