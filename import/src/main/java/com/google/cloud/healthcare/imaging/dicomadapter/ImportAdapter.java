@@ -90,7 +90,6 @@ public class ImportAdapter {
     String uploadPath = flags.persistentFileStorageLocation;
     int uploadRetryAmount = flags.persistentFileUploadRetryAmount;
     int minUploadDelay = flags.minUploadDelay;
-    int maxWaitingTimeBtwUploads = flags.maxWaitingTimeBtwUploads;
 
     // Dicom service handlers.
     DicomServiceRegistry serviceRegistry = new DicomServiceRegistry();
