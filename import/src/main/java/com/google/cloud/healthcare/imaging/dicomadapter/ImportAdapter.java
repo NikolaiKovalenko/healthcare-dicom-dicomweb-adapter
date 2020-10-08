@@ -27,7 +27,6 @@ import com.google.cloud.healthcare.deid.redactor.protos.DicomConfigProtos.DicomC
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupFlags;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.DelayCalculator;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.GcpBackupUploader;
-import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupUploadService;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.LocalBackupUploader;
@@ -54,7 +53,20 @@ public class ImportAdapter {
   private static final String STUDIES = "studies";
   private static final String GCP_PATH_PREFIX = "gs://";
 
+  public static class ImportAdapterShutdownHook extends Thread {
+
+  private Logger log = LoggerFactory.getLogger(ImportAdapterShutdownHook.class);
+
+    @Override
+    public void run() {
+      log.info("ImportAdapter is shutting down.");
+    }
+  }
+
   public static void main(String[] args) throws IOException, GeneralSecurityException {
+
+    Runtime.getRuntime().addShutdownHook(new ImportAdapterShutdownHook());
+
     Flags flags = new Flags();
     JCommander jCommander = new JCommander(flags);
     jCommander.parse(args);

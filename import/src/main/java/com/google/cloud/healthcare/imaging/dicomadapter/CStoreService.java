@@ -22,10 +22,7 @@ import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.BackupUpl
 import com.google.cloud.healthcare.imaging.dicomadapter.backupuploader.IBackupUploader;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.Event;
 import com.google.cloud.healthcare.imaging.dicomadapter.monitoring.MonitoringService;
-import com.google.common.io.CountingInputStream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -51,6 +48,7 @@ import org.dcm4che3.net.Status;
 import org.dcm4che3.net.pdu.PresentationContext;
 import org.dcm4che3.net.service.BasicCStoreSCP;
 import org.dcm4che3.net.service.DicomServiceException;
+import org.dcm4che3.util.CountingInputStream;
 import org.dcm4che3.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,13 +174,13 @@ public class CStoreService extends BasicCStoreSCP {
         MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
         log.error("Backup io processing during C-STORE request is failed: ", e);
         reportError(e);
-        throw new DicomServiceException(Status.ProcessingFailure, e);
+        throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
       } catch (DicomServiceException e) {
         reportError(e);
         throw e;
       } catch (Throwable e) {
         reportError(e);
-        throw new DicomServiceException(Status.ProcessingFailure, e);
+        throw new DicomServiceException(Status.ProcessingFailure, e.getMessage());
       }
   }
 
@@ -197,7 +195,7 @@ public class CStoreService extends BasicCStoreSCP {
       backupUploadService.startUploading(destinationClient.get(), backupState.get());
     } catch (IBackupUploader.BackupException bae) {
       MonitoringService.addEvent(Event.CSTORE_BACKUP_ERROR);
-      throw new DicomServiceException(bae.getDicomStatus() != null ? bae.getDicomStatus() : Status.ProcessingFailure, bae);
+      throw new DicomServiceException(bae.getDicomStatus() != null ? bae.getDicomStatus() : Status.ProcessingFailure, bae.getMessage());
     }
   }
 
